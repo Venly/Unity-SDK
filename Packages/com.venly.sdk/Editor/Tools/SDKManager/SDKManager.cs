@@ -93,7 +93,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
         public static readonly string SdkPackageRoot = "Packages\\com.venly.sdk\\";
 
         public static readonly string URL_GitRepository = @"git+https://github.com/ArkaneNetwork/Unity-SDK.git?path=Packages/com.venly.sdk";
-        public static readonly string URL_GitReleases = @"https://github.com/ArkaneNetwork/Unity-SDK/releases";
+        public static readonly string URL_GitReleases = @"https://api.github.com/repos/ArkaneNetwork/Unity-SDK/releases";
 
         //public static readonly string URL_GitRepository = @"git+https://github.com/Tomiha/UnityGit.git?path=com.venly.sdk";
         //public static readonly string URL_GitReleases = @"https://api.github.com/repos/Tomiha/UnityGit/releases";
@@ -330,13 +330,11 @@ namespace VenlySDK.Editor.Tools.SDKManager
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning("[Venly SDK] Failed to retrieve SDK release list.");
                         taskNotifier.NotifyFail(ex);
                     }
                 }
                 else
                 {
-                    Debug.LogWarning("[Venly SDK] Failed to retrieve SDK release list.");
                     taskNotifier.NotifyFail("Failed to retrieve SDK release list");
                 }
             };
