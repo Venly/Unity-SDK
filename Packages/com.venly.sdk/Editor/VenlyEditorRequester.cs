@@ -4,16 +4,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Proto.Promises;
-using Venly.Backends;
-using Venly.Models;
-using Venly.Models.Internal;
-using Venly.Utils;
+using VenlySDK.Backends;
+using VenlySDK.Core;
+using VenlySDK.Models;
+using VenlySDK.Models.Internal;
+using VenlySDK.Utils;
 
-namespace Venly.Editor
+namespace VenlySDK.Editor
 {
     internal class VenlyEditorRequester : IVenlyRequester
     {
-        private VyAccessToken _accessToken;
+        private VyAccessTokenDto _accessToken;
 
         private VyTask<bool> Authenticate()
         {
@@ -37,8 +38,8 @@ namespace Venly.Editor
 
             return Authenticate();
         }
-
-        public override VyTask<T> MakeRequest<T>(RequestData requestData)
+        
+        public override VyTask<T> MakeRequest<T>(VyRequestData requestData)
         {
             //Create Task
             var taskNotifier = VyTask<T>.Create("MakeRequest");
@@ -57,11 +58,6 @@ namespace Venly.Editor
                     //Validate Token
                     //--------------
                     await ValidateAccessToken(!requiresAuthorization);
-
-                    if (requiresAuthorization)
-                    {
-                        int k = 0;
-                    }
 
                     //Execute Request
                     //-------------

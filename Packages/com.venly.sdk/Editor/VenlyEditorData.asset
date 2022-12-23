@@ -2,7 +2,7 @@
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
-  m_ObjectHideFlags: 0
+  m_ObjectHideFlags: 8
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -12,14 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 908d39bce4de86942aa20031e245bd55, type: 3}
   m_Name: VenlyEditorData
   m_EditorClassIdentifier: 
-  SdkPackageRoot: Packages\com.venly.sdk\
   PublicResourceRoot: Assets\Resources\
-  Version: v0.1.12-alpha
+  Version: v0.1.27-alpha
+  SupportedChainsWallet: 
+  SupportedChainsNft: 
   SDKManager:
-    GitReleaseURL: https://api.github.com/repos/Tomiha/UnityGit/releases
-    GitSdkURL: git+https://github.com/Tomiha/UnityGit.git?path=com.venly.sdk
     UnappliedSettings: 0
     CurrentClientId: ThomasGoussaert-capsule
     SelectedBackend: 2
-    AvailableAppIds:
-    - 02fed4b5-2df6-4c94-9a72-3b733db4f2cd

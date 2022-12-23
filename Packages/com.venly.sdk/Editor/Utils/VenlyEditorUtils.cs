@@ -9,8 +9,10 @@ using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
+using VenlySDK.Models;
+using VenlySDK.Utils;
 
-namespace Venly.Editor.Utils
+namespace VenlySDK.Editor.Utils
 {
     internal static class VenlyEditorUtils
     {
@@ -43,7 +45,7 @@ namespace Venly.Editor.Utils
         #region DATA Handling
         public static void StoreBackup<T>(T dataSO) where T : ScriptableObject
         {
-            Debug.Log($"VenlySettingsEd Store Backup called {typeof(T).Name}");
+            VenlyDebugEd.LogDebug($"VenlyEditorSettings Store Backup called {typeof(T).Name}");
             var soType = typeof(T).Name.ToLower();
             var dataJson = JsonConvert.SerializeObject(dataSO);
             EditorPrefs.SetString($"com.venly.sdk.{soType}", dataJson);
@@ -51,7 +53,7 @@ namespace Venly.Editor.Utils
         
         public static void RestoreBackup<T>(T dataSo, bool removeAfterRestore = true) where T : ScriptableObject
         {
-            Debug.Log($"VenlySettingsEd Restore Backup called {typeof(T).Name}");
+            VenlyDebugEd.LogDebug($"VenlyEditorSettings Restore Backup called {typeof(T).Name}");
             var soType = typeof(T).Name.ToLower();
             if (!EditorPrefs.HasKey($"com.venly.sdk.{soType}")) return;
 
@@ -60,7 +62,7 @@ namespace Venly.Editor.Utils
 
             var serialializedData = new SerializedObject(dataSo);
             var soProperty = serialializedData.GetIterator();
-            Debug.Log("VenlySettingsEd Restore Backup found");
+            VenlyDebugEd.LogDebug("VenlyEditorSettings Restore Backup found");
             do
             {
                 UpdateProperty(soProperty, jsonData);
@@ -150,6 +152,20 @@ namespace Venly.Editor.Utils
         #endregion
 
         #region Helpers
+        internal static eVyChain[] TrimUnsupportedChains(eVyChainFULL[] input)
+        {
+            var supportedChains = (eVyChain[])Enum.GetValues(typeof(eVyChain));
+            var filteredList = new List<eVyChain>();
+
+            foreach (var supported in supportedChains)
+            {
+                if (input.Any(inputChain => inputChain.GetMemberName() == supported.GetMemberName()))
+                    filteredList.Add(supported);
+            }
+
+            return filteredList.ToArray();
+        }
+
         public static Version ParseSemVer(string version)
         {
             version = version.Replace("v", "");

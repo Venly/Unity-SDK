@@ -4,10 +4,10 @@ using UnityEditor;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
-using Venly.Data;
-using Venly.Editor.Utils;
+using VenlySDK.Data;
+using VenlySDK.Editor.Utils;
 
-namespace Venly.Editor.Tools.ContractManager
+namespace VenlySDK.Editor.Tools.ContractManager
 {
     public class ContractListView : VisualElement
     {
@@ -27,13 +27,6 @@ namespace Venly.Editor.Tools.ContractManager
         private VyItemSO _selectedItem => _selectedElement?.userData as VyItemSO;
 
         #region Cstr
-
-        [MenuItem("Window/Venly/Contract Manager")]
-        public static void OpenWindows()
-        {
-            ContractManager.Instance.MainView = EditorWindow.GetWindow<ContractManagerView>();
-            ContractManager.Instance.MainView.titleContent = new GUIContent("Venly Contract Manager");
-        }
 
         public new class UxmlFactory : UxmlFactory<ContractListView, UxmlTraits> {}
 
