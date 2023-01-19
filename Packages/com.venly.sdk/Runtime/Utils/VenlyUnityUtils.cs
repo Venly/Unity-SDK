@@ -1,9 +1,7 @@
 #if !ENABLE_VENLY_AZURE
-using Proto.Promises;
 using UnityEngine;
 using UnityEngine.Networking;
 using VenlySDK.Core;
-using VenlySDK.Utils;
 
 public static class VenlyUnityUtils
 {
