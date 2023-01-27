@@ -5,21 +5,18 @@ using VenlySDK.Models;
 //ITEM
 public class VyControl_TypeValueListItem : VyControl_ListViewItemBase<VyTypeValuePair>
 {
-    public VyControl_TypeValueListItem() : base()
-    {
-        var lbl = new Label();
-        lbl.name = "lbl-item";
-        Add(lbl);
-    }
+    public VyControl_TypeValueListItem() : base("VyControl_TypeValueListItem") { }
 
     public override void BindItem(VyTypeValuePair sourceItem)
     {
-        SetLabel("lbl-item", $"Type: {sourceItem.Type}\nValue:{sourceItem.Value}");
+        SetLabel("lbl-type", sourceItem.Type);
+        SetLabel("lbl-value", sourceItem.Value);
     }
 
     public override void BindMockItem()
     {
-        SetLabel("lbl-item", $"Type: someType\nValue: someValue");
+        SetLabel("lbl-type", "MockType");
+        SetLabel("lbl-value", "MockValue");
     }
 }
 

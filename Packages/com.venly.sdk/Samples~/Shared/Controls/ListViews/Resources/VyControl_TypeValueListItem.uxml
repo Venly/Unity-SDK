@@ -3,13 +3,8 @@
     <Style src="project://database/Assets/Samples/Shared/LabelField_ListItem.uss?fileID=7433441132597879392&amp;guid=1b0f1b491158d5c46aa479eab74e12a3&amp;type=3#LabelField_ListItem" />
     <ui:VisualElement style="flex-grow: 1; align-items: flex-start; flex-direction: row; width: 100%;">
         <ui:VisualElement class="list-item-border-style list-item-style" style="flex-shrink: 1; flex-grow: 1;">
-            <LabelField name="lbl-chain" label="Chain" />
-            <LabelField name="lbl-id" label="Id" />
-            <LabelField name="lbl-address" label="Address" />
-            <LabelField name="lbl-description" label="Desc." />
-            <ui:VisualElement style="position: absolute; align-items: auto; flex-direction: row; justify-content: flex-end; flex-grow: 1; top: 0; right: 10px;">
-                <ui:Label text="[ARCHIVED]" display-tooltip-when-elided="true" name="lbl-archived" style="-unity-font-style: bold; color: rgb(255, 0, 0); display: none;" />
-            </ui:VisualElement>
+            <LabelField label="Type" name="lbl-type" />
+            <LabelField label="Value" name="lbl-value" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

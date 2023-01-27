@@ -14,7 +14,8 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
     public T LandingAuth = default;
 
     public ApiExplorer_LoaderVC Loader;
-    public ApiExplorer_ExceptionVC ExceptionView;
+    public ApiExplorer_ExceptionVC Exception;
+    public ApiExplorer_InfoVC Info;
 
     private bool _firstFrame = true;
 
@@ -30,7 +31,7 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
 
         InitializeViews();
         Loader.Hide();
-        ExceptionView.Hide();
+        Exception.Hide();
     }
 
     void Update()
@@ -128,7 +129,7 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
 
     public void HandleException(Exception ex)
     {
-        ExceptionView.Show(ex);
+        Exception.Show(ex);
     }
 
     void InitializeViews()

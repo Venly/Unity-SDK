@@ -112,8 +112,8 @@ namespace VenlySDK.Models
     {
         [JsonProperty("tokenAddress")] public string TokenAddress { get; set; }
         [JsonProperty("rawBalance")] public string RawBalance { get; set; }
-        [JsonProperty("balance")] public long Balance { get; set; }
-        [JsonProperty("decimals")] public long Decimals { get; set; }
+        [JsonProperty("balance")] public double Balance { get; set; }
+        [JsonProperty("decimals")] public Int32 Decimals { get; set; }
         [JsonProperty("symbol")] public string Symbol { get; set; }
         [JsonProperty("logo")] public string Logo { get; set; }
         [JsonProperty("type")] public string Type { get; set; }
