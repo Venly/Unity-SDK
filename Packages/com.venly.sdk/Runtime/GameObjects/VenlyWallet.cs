@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 using VenlySDK.Core;
-using VenlySDK.Models;
+using VenlySDK.Models.Shared;
+using VenlySDK.Models.Wallet;
 
 namespace VenlySDK.GameObjects
 {
@@ -22,7 +18,7 @@ namespace VenlySDK.GameObjects
         public float PollInterval = 10.0f;
 
         [HideInInspector] public VyWalletDto WalletDto;
-        [HideInInspector] public VyCryptoToken[] FungibleTokensDto;
+        [HideInInspector] public VyCryptoTokenDto[] FungibleTokensDto;
         [HideInInspector] public VyMultiTokenDto[] NonFungibleTokensDto;
         [HideInInspector] public VyWalletEventDto[] WalletEventsDto;
 
@@ -31,7 +27,7 @@ namespace VenlySDK.GameObjects
         async void Awake()
         {
             if(!Venly.IsInitialized)
-                Venly.Initialize();
+                VenlyUnity.Initialize();
 
             if (ConnectOnStartup)
             {

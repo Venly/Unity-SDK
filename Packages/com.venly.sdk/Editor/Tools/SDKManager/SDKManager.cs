@@ -10,7 +10,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using VenlySDK.Core;
 using VenlySDK.Editor.Utils;
-using VenlySDK.Models;
+using VenlySDK.Models.Shared;
 using VenlySDK.Utils;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
@@ -310,10 +310,13 @@ namespace VenlySDK.Editor.Tools.SDKManager
             var definesList = currentDefines.ToList();
             definesList.RemoveAll(define => define.Contains("_VENLY_"));
 
+            definesList.Add("VENLY_API_UNITY");
+
             //Populate with required Defines
             if (backend == eVyBackendProvider.DevMode)
             {
                 definesList.Add("ENABLE_VENLY_DEVMODE");
+                definesList.Add("ENABLE_VENLY_API_SERVER");
             }
             else if (backend == eVyBackendProvider.PlayFab)
             {
@@ -322,6 +325,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
             else if (backend == eVyBackendProvider.Custom)
             {
                 definesList.Add("ENABLE_VENLY_CUSTOM");
+                definesList.Add("ENABLE_VENLY_API_SERVER");
             }
 
             PlayerSettings.SetScriptingDefineSymbols(currBuildTarget, definesList.ToArray());

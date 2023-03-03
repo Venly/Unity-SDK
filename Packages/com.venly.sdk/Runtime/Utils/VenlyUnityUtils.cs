@@ -7,6 +7,8 @@ public static class VenlyUnityUtils
 {
     public static VyTask<Texture2D> DownloadImage(string uri)
     {
+        if(string.IsNullOrEmpty(uri)) return VyTask<Texture2D>.Failed("Failed to download image. (Uri is Empty)");
+
         var taskNotifier = VyTask<Texture2D>.Create();
 
         var webRequest = UnityWebRequestTexture.GetTexture(uri);
