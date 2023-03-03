@@ -2,6 +2,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VenlySDK.Models;
+using VenlySDK.Models.Shared;
+using VenlySDK.Models.Wallet;
 
 public class ApiExplorer_MultiTokenDetailsVC : SampleViewBase<eApiExplorerViewId>
 {
@@ -75,6 +77,9 @@ public class ApiExplorer_MultiTokenDetailsVC : SampleViewBase<eApiExplorerViewId
 
     private void BuildAnimationUrls()
     {
+        _fldAttributes.ToggleDisplay(_token.AnimationUrls != null);
+        if (_token.AnimationUrls == null) return;
+
         _fldAnimationUrls.RegisterValueChangedCallback(e =>
         {
             if (e.newValue) _fldAttributes.value = false;
@@ -101,6 +106,9 @@ public class ApiExplorer_MultiTokenDetailsVC : SampleViewBase<eApiExplorerViewId
 
     private void BuildAttributes()
     {
+        _fldAttributes.ToggleDisplay(_token.Attributes != null);
+        if (_token.Attributes == null) return;
+
         _fldAttributes.RegisterValueChangedCallback(e =>
         {
             if (e.newValue) _fldAnimationUrls.value = false;
@@ -127,6 +135,11 @@ public class ApiExplorer_MultiTokenDetailsVC : SampleViewBase<eApiExplorerViewId
 
     private void OnClick_Transfer()
     {
+        var transferView = eApiExplorerViewId.WalletApi_TransferMultiToken;
+        var wallet = GetBlackBoardData<VyWalletDto>("sourceWallet");
+        ViewManager.SetViewBlackboardData(transferView, "sourceWallet", wallet);
+        ViewManager.SetViewBlackboardData(transferView, "sourceToken", _token);
 
+        ViewManager.SwitchView(transferView);
     }
 }

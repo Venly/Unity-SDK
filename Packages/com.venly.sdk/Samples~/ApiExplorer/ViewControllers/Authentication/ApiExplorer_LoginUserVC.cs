@@ -37,7 +37,7 @@ public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
 
     }
 
-    #if !ENABLE_VENLY_DEVMODE
+#if ENABLE_VENLY_PLAYFAB
     private void onClick_LoginUser()
     {
         ViewManager.Loader.Show("Logging in...");
@@ -50,10 +50,10 @@ public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
             .OnSuccess(loginResult =>
             {
                 //Set Authentication Context for this User
-                Venly.SetRequesterData(VyPlayfabRequester.AuthContextDataKey, loginResult.AuthenticationContext);
+                Venly.SetProviderData(VyProvider_PlayFab.AuthContextDataKey, loginResult.AuthenticationContext);
 
                 //Retrieve User Wallet
-                Venly.BackendExtension.GetWalletForUser()
+                Venly.ProviderExtensions.GetWalletForUser()
                     .OnSuccess(wallet =>
                     {
                         //Set Wallet Data
