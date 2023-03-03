@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using VenlySDK.Core;
-using VenlySDK.Models;
+﻿using VenlySDK.Core;
+using VenlySDK.Models.Shared;
+using VenlySDK.Models.Wallet;
 using VenlySDK.Utils;
 
 namespace VenlySDK
@@ -288,7 +288,8 @@ namespace VenlySDK
                 #endregion
             }
 
-#if (UNITY_EDITOR || UNITY_SERVER || ENABLE_VENLY_API_SERVER) && !ENABLE_VENLY_PLAYFAB
+
+#if ((UNITY_EDITOR || UNITY_SERVER) || ENABLE_VENLY_API_SERVER) && !DISABLE_VENLY_API_SERVER
             public static class Server
             {
                 /// <summary>

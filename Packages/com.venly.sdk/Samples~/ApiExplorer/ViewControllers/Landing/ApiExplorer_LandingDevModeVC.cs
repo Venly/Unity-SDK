@@ -10,10 +10,8 @@ public class ApiExplorer_LandingDevModeVC : SampleViewBase<eApiExplorerViewId>
 
         ShowNavigateBack = false;
 
-#if ENABLE_VENLY_DEVMODE
         SetLabel("lbl-client-id", VenlySettings.ClientId);
         SetLabel("lbl-backend-provider", VenlySettings.BackendProvider.ToString());
-#endif
     }
 
     protected override void OnDeactivate()
@@ -28,7 +26,7 @@ public class ApiExplorer_LandingDevModeVC : SampleViewBase<eApiExplorerViewId>
 
     private void onClick_NftAPI()
     {
-        ViewManager.SwitchView(eApiExplorerViewId.Main_NftApi);
+
     }
 
     private void onClick_LoginUser()

@@ -7,6 +7,7 @@ using UnityEngine;
 using VenlySDK.Core;
 using VenlySDK.Data;
 using VenlySDK.Models;
+using VenlySDK.Models.Nft;
 
 namespace VenlySDK.Editor.Tools.ContractManager
 {
@@ -47,14 +48,14 @@ namespace VenlySDK.Editor.Tools.ContractManager
         private bool _isInitialize = false;
         public bool IsInitialize => _isInitialize;
 
-        private VyEditorRequester _requester;
+        private VyProvider_Editor _provider;
         public ContractManagerView MainView { get; internal set; }
 
         private void Initialize()
         {
             if (_isInitialize) return;
 
-            _requester = new VyEditorRequester();
+            _provider = new VyProvider_Editor();
 
             _isInitialize = true;
         }

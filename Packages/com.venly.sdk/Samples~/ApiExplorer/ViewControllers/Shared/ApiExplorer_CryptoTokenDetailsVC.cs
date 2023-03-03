@@ -4,7 +4,7 @@ using VenlySDK.Models;
 
 public class ApiExplorer_CryptoTokenDetailsVC : SampleViewBase<eApiExplorerViewId>
 {
-    private VyCryptoTokenDto _token;
+    private VyCryptoToken _token;
 
     public ApiExplorer_CryptoTokenDetailsVC() : 
         base(eApiExplorerViewId.Shared_CryptoTokenDetails)
@@ -23,7 +23,7 @@ public class ApiExplorer_CryptoTokenDetailsVC : SampleViewBase<eApiExplorerViewI
         ShowRefresh = false;
 
         //Retrieve Token from Blackboard (should be set by calling view)
-        _token = GetBlackBoardData<VyCryptoTokenDto>("token");
+        _token = GetBlackBoardData<VyCryptoToken>("token");
 
         //Set Data
         SetLabel("lbl-token-name", _token.Name);
@@ -40,11 +40,6 @@ public class ApiExplorer_CryptoTokenDetailsVC : SampleViewBase<eApiExplorerViewI
 
     private void OnClick_Transfer()
     {
-        var transferView = eApiExplorerViewId.WalletApi_TransferCryptoToken;
-        var wallet = GetBlackBoardData<VyWalletDto>("sourceWallet");
-        ViewManager.SetViewBlackboardData(transferView, "sourceWallet", wallet);
-        ViewManager.SetViewBlackboardData(transferView, "sourceToken", _token);
 
-        ViewManager.SwitchView(transferView);
     }
 }

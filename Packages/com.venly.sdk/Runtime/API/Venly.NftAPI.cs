@@ -1,5 +1,6 @@
 ﻿using VenlySDK.Core;
-using VenlySDK.Models;
+using VenlySDK.Models.Nft;
+using VenlySDK.Models.Shared;
 using VenlySDK.Utils;
 
 namespace VenlySDK
@@ -136,7 +137,7 @@ namespace VenlySDK
                 }
             }
 
-#if (UNITY_EDITOR || UNITY_SERVER || ENABLE_VENLY_API_SERVER) && !ENABLE_VENLY_PLAYFAB
+#if ((UNITY_EDITOR || UNITY_SERVER) || ENABLE_VENLY_API_SERVER) && !DISABLE_VENLY_API_SERVER
             public static class Server
             {
                 //todo: remove applicationID in params

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using VenlySDK;
-using VenlySDK.Core;
 using VenlySDK.Models;
 
 public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
@@ -14,8 +13,6 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
     public T LandingAuth = default;
 
     public ApiExplorer_LoaderVC Loader;
-    public ApiExplorer_ExceptionVC Exception;
-    public ApiExplorer_InfoVC Info;
 
     private bool _firstFrame = true;
 
@@ -31,7 +28,6 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
 
         InitializeViews();
         Loader.Hide();
-        Exception.Hide();
     }
 
     void Update()
@@ -44,17 +40,6 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
     }
 
     public abstract string GetTitle(T viewId);
-
-    public VyTask<object> SelectionMode(SampleViewBase<T> targetView, string viewTitle = null)
-    {
-        return targetView.SelectionMode(viewTitle);
-    }
-
-    public VyTask<object> SelectionMode(T targetViewId, string viewTitle = null)
-    {
-        var targetView = GetView(targetViewId);
-        return SelectionMode(targetView, viewTitle);
-    }
 
     public void SwitchView(SampleViewBase<T> targetView, bool setBackNavigation = true)
     {
@@ -105,12 +90,6 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
         return GetGlobalBlackboardDataRaw(key) as T0;
     }
 
-    public void ClearGlobalBlackboardData(string key)
-    {
-        if (HasGlobalBlackboardData(key))
-            _globalBlackboard.Remove(key);
-    }
-
     public bool HasGlobalBlackboardData(string key)
     {
         return _globalBlackboard.ContainsKey(key);
@@ -129,7 +108,7 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
 
     public void HandleException(Exception ex)
     {
-        Exception.Show(ex);
+        Debug.LogException(ex);
     }
 
     void InitializeViews()

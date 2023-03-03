@@ -39,7 +39,7 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
         
     }
 
-#if ENABLE_VENLY_PLAYFAB
+#if !ENABLE_VENLY_DEVMODE
     private void onClick_CreateUser()
     {
         ViewManager.Loader.Show("Logging in...");

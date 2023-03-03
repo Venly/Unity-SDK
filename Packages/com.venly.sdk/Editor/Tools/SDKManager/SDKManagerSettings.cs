@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using VenlySDK.Editor.Utils;
 using VenlySDK.Models;
+using VenlySDK.Models.Shared;
 
 namespace VenlySDK.Editor.Tools.SDKManager
 {
