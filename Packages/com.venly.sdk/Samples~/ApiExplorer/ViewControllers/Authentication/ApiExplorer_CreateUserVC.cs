@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
 using VenlySDK;
 using VenlySDK.Core;
@@ -5,6 +7,7 @@ using VenlySDK.Models.Shared;
 using VenlySDK.Models.Wallet;
 
 #if ENABLE_VENLY_PLAYFAB
+using UnityEngine;
 using VenlySDK.Backends.PlayFab;
 #endif
 
@@ -37,7 +40,6 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
 
     protected override void OnDeactivate()
     {
-        
     }
 
 #if ENABLE_VENLY_PLAYFAB
@@ -63,7 +65,7 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
                     Identifier = $"{VenlySettings.BackendProvider}-provider-wallet",
                     Pincode = _txtPincode.text,
                     WalletType = eVyWalletType.WhiteLabel
-                };
+                }; 
 
                 //Create Wallet for User
                 Venly.ProviderExtensions.CreateWalletForUser(createParams)

@@ -26,6 +26,10 @@ namespace VenlySDK.Models.Shared
         [JsonProperty("attributes")] public VyTokenAttributeDto[] Attributes { get; set; }
         [JsonProperty("transferFees")] public bool TransferFees { get; set; }
 
+        //Inconsistent between Wallet & NFT api
+        [JsonProperty("image")] private string _image { set => ImageUrl = value; }
+        [JsonProperty("imagePreview")] private string _imagePreview { set => ImagePreviewUrl = value; }
+        [JsonProperty("imageThumbnail")] private string _imageThumbnail { set => ImageThumbnailUrl = value; }
         public bool HasAttribute(string name)
         {
             if (Attributes == null) return false;

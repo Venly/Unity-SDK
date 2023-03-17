@@ -18,6 +18,7 @@ namespace VenlySDK.Models.Shared
         [EnumMember(Value = "DEV_MODE")] DevMode,
         [EnumMember(Value = "CUSTOM")] Custom,
         [EnumMember(Value = "PLAYFAB")] PlayFab,
+        [EnumMember(Value = "NONE")] None,
 
 #if !UNITY_2017_1_OR_NEWER
         Server

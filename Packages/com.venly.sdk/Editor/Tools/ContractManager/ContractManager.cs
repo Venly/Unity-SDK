@@ -31,7 +31,7 @@ namespace VenlySDK.Editor.Tools.ContractManager
         }
         #endregion
 
-        [MenuItem("Window/Venly/Contract Manager")]
+        [MenuItem("Window/Venly/Contract Manager", priority = 2)]
         public static void ShowContractManager()
         {
             var types = new List<Type>()
@@ -337,7 +337,7 @@ namespace VenlySDK.Editor.Tools.ContractManager
                     contract.ChangeItemState(eVyItemState.Live);
                     contract.FromModel(newContract);
                 })
-                ;//.OnFail(Debug.LogException);
+                .OnFail(Debug.LogException);
         }
 
         private void PushTokenType(VyTokenTypeSO tokenType)

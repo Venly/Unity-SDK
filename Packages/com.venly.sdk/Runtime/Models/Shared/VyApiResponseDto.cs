@@ -31,8 +31,10 @@ namespace VenlySDK.Models.Shared
     public struct VyApiReponseError
     {
         [JsonProperty("code")] public string Code;
+        [JsonProperty("errorCode")] private string _errorCode { set => Code = value; } //Legacy Fallback
         [JsonProperty("traceCode")] public string TraceCode;
         [JsonProperty("message")] public string Message;
+        [JsonProperty("errorMessage")] private string _errorMessage { set => Message = value; } //Legacy Fallback
         [JsonProperty("id")] public string Id;
 
         public static VyApiReponseError FromException(Exception ex)
