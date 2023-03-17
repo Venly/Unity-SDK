@@ -104,6 +104,7 @@ namespace VenlySDK.Core
         private Action _onSuccessCallback;
         private Action<Exception> _onFailCallback;
         private Action<VyTaskResult> _onCompleteCallback;
+        private Action _onCancelCallback;
         private Action _onFinallyCallback;
 
         private VyTaskAwaiter _awaiter;
@@ -248,7 +249,8 @@ namespace VenlySDK.Core
                     CallFail();
                     break;
                 case eVyTaskState.Cancelled:
-                    throw new Exception("VyTask \'{HandleCompletion}\' >> Task Canceled (todo)");
+                    CallCancel();
+                    break;
             }
 
             CallComplete();
@@ -266,6 +268,12 @@ namespace VenlySDK.Core
             if (_onFailCallback == null) return;
             _onFailCallback.Invoke(_taskResult.Exception);
             ExceptionConsumed(true);
+        }
+
+        private void CallCancel()
+        {
+            if (_onCancelCallback == null) return;
+            _onCancelCallback.Invoke();
         }
 
         private void CallComplete()
@@ -330,6 +338,14 @@ namespace VenlySDK.Core
         {
             _onFailCallback = callback;
             if (IsFail) CallFail();
+
+            return this;
+        }
+
+        public VyTask OnCancel(Action callback)
+        {
+            _onCancelCallback = callback;
+            if(IsCancelled) CallCancel();
 
             return this;
         }

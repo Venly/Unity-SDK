@@ -14,6 +14,7 @@ namespace VenlySDK
     {
         public static bool IsInitialized { get; private set; }
         public static eVyEnvironment CurrentEnvironment { get; private set; }
+        public static string CurrentProviderType => _provider?.ProviderType;
 
         private static readonly Dictionary<string, VyProviderBase> _registeredProviders = new();
         private static VyProviderBase _provider;

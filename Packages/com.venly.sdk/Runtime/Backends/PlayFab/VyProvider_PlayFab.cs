@@ -40,7 +40,12 @@ namespace VenlySDK.Backends.PlayFab
         {
             if (!HasAuthContext)
             {
-                return VyTask<T>.Failed(new Exception("[Playfab requester] AuthContext not set."));
+                return VyTask<T>.Failed(new Exception("[Playfab Provider] AuthContext not set."));
+            }
+
+            if (string.IsNullOrEmpty(VenlySettings.PlayFabBackendSettings.VenlyAzureFunction))
+            {
+                return VyTask<T>.Failed(new Exception("[Playfab Provider] Venly Azure Function cannot be NULL or empty. (SDK Settings)"));
             }
 
             var taskNotifier = VyTask<T>.Create();
