@@ -20,7 +20,7 @@ namespace VenlySDK.Models.Shared
     [Serializable]
     public class VyContractOutput
     {
-        [JsonProperty("type")] public string Type { get; private set; }
+        [JsonProperty("type")] public string Type { get; set; }
     }
 
     [Serializable]
