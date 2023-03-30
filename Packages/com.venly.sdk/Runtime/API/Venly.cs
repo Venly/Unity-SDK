@@ -19,7 +19,7 @@ namespace VenlySDK
         private static readonly Dictionary<string, VyProviderBase> _registeredProviders = new();
         private static VyProviderBase _provider;
 
-#if VENLY_API_UNITY
+#if !VENLY_API_NOT_UNITY //Unity
         //Register a Provider that can be used during API Initialization
         public static void RegisterProvider(VyProviderBase provider)
         {
@@ -53,7 +53,7 @@ namespace VenlySDK
         }
 #endif
 
-#if VENLY_API_UNITY
+#if !VENLY_API_NOT_UNITY
         internal
 #else
         public
@@ -63,7 +63,7 @@ namespace VenlySDK
             CurrentEnvironment = env;
         }
 
-#if VENLY_API_UNITY
+#if !VENLY_API_NOT_UNITY
         public static VyTask Initialize(VyProviderBase provider, eVyEnvironment env)
 #else
         public static VyTask Initialize(VyServerProviderBase provider, eVyEnvironment env)
@@ -90,7 +90,7 @@ namespace VenlySDK
             //Set IsInitialized flag!
             IsInitialized = true;
 
-#if VENLY_API_UNITY
+#if !VENLY_API_NOT_UNITY
             return VyTask.Succeeded();
 #else
             return provider.VerifyAuthentication();
