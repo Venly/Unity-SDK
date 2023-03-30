@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.Build;
@@ -124,6 +125,9 @@ namespace VenlySDK.Editor.Tools.SDKManager
         [InitializeOnLoadMethod]
         static void InitializeStatic()
         {
+            //Load EditorSettings
+            VenlyEditorSettings.Load();
+
             //Initialize the SDK
             //******************
             SDKManager.Instance.Initialize();
@@ -277,7 +281,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
             return taskNotifier.Task;
         }
 
-        private eVyBackendProvider GetConfiguredBackend()
+        private static eVyBackendProvider GetConfiguredBackend()
         {
             var selectedBackend = eVyBackendProvider.DevMode;
 
@@ -326,14 +330,23 @@ namespace VenlySDK.Editor.Tools.SDKManager
 
         private static List<string> GenerateDefinesForProvider(eVyBackendProvider backend)
         {
-            return new List<string>
+            var list =  new List<string>
             {
-                "VENLY_API_UNITY",
+                //"VENLY_API_UNITY",
                 $"ENABLE_VENLY_{backend.GetMemberName().ToUpper()}"
             };
+
+#if UNITY_EDITOR
+            if (backend == eVyBackendProvider.DevMode)
+            {
+                list.Add("ENABLE_VENLY_API_SERVER");
+            }
+#endif
+
+            return list;
         }
 
-        public void ConfigureForBackend(eVyBackendProvider backend)
+        public static void ConfigureForBackend(eVyBackendProvider backend)
         {
             //Generate Defines
             var definesList = GenerateDefinesForProvider(backend);

@@ -53,13 +53,13 @@ public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
 
 
     private
-#if ENABLE_VENLY_DEVMODE
+#if ENABLE_VENLY_DEV_MODE
     async
 #endif
     void onClick_Archive()
     {
 #region DevMode Only (SERVER)
-#if ENABLE_VENLY_DEVMODE
+#if ENABLE_VENLY_DEV_MODE
         ViewManager.Loader.Show("Archiving Contract...");
         var result = await Venly.NftAPI.Server.ArchiveContract(_contract.Id);
         ViewManager.Loader.Hide();

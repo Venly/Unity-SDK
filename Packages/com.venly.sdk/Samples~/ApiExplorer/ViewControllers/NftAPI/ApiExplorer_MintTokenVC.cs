@@ -168,7 +168,7 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
 
     private void onCick_Mint()
     {
-#if ENABLE_VENLY_DEVMODE
+#if ENABLE_VENLY_DEV_MODE
         if (!Validate()) return;
 
         var reqParams = new VyMintTokenDto()

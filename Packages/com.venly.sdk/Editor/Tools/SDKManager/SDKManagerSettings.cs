@@ -129,7 +129,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
 
         private void onApplySettings_Clicked()
         {
-            SDKManager.Instance.ConfigureForBackend(SdkManagerData.SelectedBackend);
+            SDKManager.ConfigureForBackend(SdkManagerData.SelectedBackend);
             ValidateApplyVisibility();
         }
         #endregion

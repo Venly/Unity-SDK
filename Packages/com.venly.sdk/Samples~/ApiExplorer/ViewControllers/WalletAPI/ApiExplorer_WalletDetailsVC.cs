@@ -75,13 +75,13 @@ public class ApiExplorer_WalletDetailsVC : SampleViewBase<eApiExplorerViewId>
 
 
     private
-#if ENABLE_VENLY_DEVMODE
+#if ENABLE_VENLY_DEV_MODE
     async
 #endif
     void onClick_Archive()
     {
         #region DevMode Only (SERVER)
-#if ENABLE_VENLY_DEVMODE
+#if ENABLE_VENLY_DEV_MODE
         VyTaskResult<VyWalletMetadataResponseDto> result = null;
         if (!_walletData.Archived)
         {

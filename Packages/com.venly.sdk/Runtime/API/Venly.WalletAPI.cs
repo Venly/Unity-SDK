@@ -260,10 +260,10 @@ namespace VenlySDK
                 ///// </summary>
                 ///// <param name="reqParams"></param>
                 ///// <returns></returns>
-                //public static VyTask MetaTransaction_TransferMultiToken(VyMetaTransferMultiTokenDto reqParams)
+                //public static VyTask<VyTransferInfoDto> MetaTransaction_TransferMultiToken(VyMetaTransferMultiTokenDto reqParams)
                 //{
-                //    var taskNotifier = VyTask.Create();
-
+                //    var taskNotifier = VyTask<VyTransferInfoDto>.Create();
+                //    //
                 //    taskNotifier.Scope(async () =>
                 //    {
                 //        //0. Get Nonce
@@ -272,7 +272,7 @@ namespace VenlySDK
                 //            Chain = reqParams.SourceWallet.Chain,
                 //            ContractAddress = reqParams.Token.Contract.Address,
                 //            FunctionName = "getNonce",
-                //            WalletAddress = "0x0000000000000000000000000000000000000000",
+                //            WalletAddress = reqParams.SourceWallet.Address,
                 //            Inputs = new VyContractInput[]
                 //            {
                 //                new()
@@ -293,8 +293,10 @@ namespace VenlySDK
                 //        //1. EIP712 JSON document Generation
                 //        var eip712Doc = TransactionHelpers.CreateEIP721Document(reqParams, nonce, out var functionSignature);
 
-                //        //2. Sign document (destination wallet)
-                //        var signatureRequest = new VySignDto()
+                //        Console.WriteLine(functionSignature);
+
+                //       //2. Sign document (destination wallet)
+                //       var signatureRequest = new VySignDto()
                 //        {
                 //            Pincode = reqParams.SourcePincode,
                 //            Chain = reqParams.SourceWallet.Chain,
@@ -323,15 +325,13 @@ namespace VenlySDK
                 //                    new (){Type = "bytes32", Value = signature.R},
                 //                    new (){Type = "bytes32", Value = signature.S},
                 //                    new (){Type = "uint8", Value = signature.V},
-
                 //                }
                 //            }
                 //        };
 
                 //        var result = await ExecuteContract(executeContractRequest).AwaitResult();
-                //        int k = 0;
 
-                //        taskNotifier.NotifySuccess();
+                //        taskNotifier.NotifySuccess(result);
                 //    });
 
                 //    return taskNotifier.Task;

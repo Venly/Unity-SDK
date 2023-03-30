@@ -23,11 +23,24 @@ namespace VenlySDK.Models
         public static string CreateFunctionSignature_safeTransferFrom(string fromAddress, string toAddress, string tokenId, int amount = 1)
         {
             return "0xf242432a" +
-                   $"{fromAddress.PadLeft(64, '0')}" +
-                   $"{toAddress.PadLeft(64, '0')}" +
-                   $"{tokenId.PadLeft(64,'0')}" +
-                   $"{amount.ToString().PadLeft(64,'0')}" +
+                   $"{fromAddress.Replace("0x","").PadLeft(64, '0')}" +
+                   $"{toAddress.Replace("0x", "").PadLeft(64, '0')}" +
+                   $"{HexPad(tokenId)}" +
+                   $"{HexPad(amount)}" +
                    $"{"".PadLeft(64,'0')}";
+        }
+
+        private static string HexPad(string input, int padLength = 64)
+        {
+            var number = int.Parse(input);
+            return HexPad(number);
+        }
+
+        private static string HexPad(int input, int padLength = 64)
+        {
+            var hexString = $"{input:x}";
+
+            return hexString.PadLeft(padLength, '0');
         }
 
         public static int GetChainId(eVyChain chain, eVyEnvironment env)
