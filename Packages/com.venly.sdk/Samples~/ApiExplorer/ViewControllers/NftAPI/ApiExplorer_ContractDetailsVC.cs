@@ -2,8 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VenlySDK;
-using VenlySDK.Models.Nft;
-using VenlySDK.Models.Shared;
+using VenlySDK.Models;
 using VenlySDK.Utils;
 
 public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>

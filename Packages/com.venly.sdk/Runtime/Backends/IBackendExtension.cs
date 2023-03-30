@@ -1,5 +1,5 @@
 using VenlySDK.Core;
-using VenlySDK.Models.Wallet;
+using VenlySDK.Models;
 
 namespace VenlySDK.Backends
 {

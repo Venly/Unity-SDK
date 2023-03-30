@@ -5,7 +5,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using VenlySDK.Core;
 using VenlySDK.Models;
-using VenlySDK.Models.Shared;
 
 namespace VenlySDK.Utils
 {
@@ -34,59 +33,19 @@ namespace VenlySDK.Utils
             #region Parse Error
             if (statusCode != HttpStatusCode.OK)
             {
-                VyApiResponseDto apiResponse = null;
-
-                //Venly Error Parsing...
-                var errorJToken = JToken.Parse(response);
-                if (errorJToken.Type == JTokenType.Array) //Array Errors
+                VyResponseDto apiResponse = null;
+                if (response.StartsWith("["))
                 {
-                    apiResponse = new VyApiResponseDto()
+                    apiResponse = new VyResponseDto()
                     {
                         Success = false,
-                        Errors = errorJToken.ToObject<VyApiReponseError[]>() ?? Array.Empty<VyApiReponseError>()
+                        Errors = JArray.Parse(response).ToObject<VyReponseError[]>()
                     };
                 }
-                else if(errorJToken.Type == JTokenType.Object)
+                else
                 {
-                    var errorJObject = errorJToken as JObject;
-                    if (!errorJObject.ContainsKey("success"))
-                    {
-                        string errorCode;
-                        string errorMessage;
-
-                        if (errorJObject.ContainsKey("error"))//error + error_description
-                        {
-                            errorCode = errorJObject["error"]?.ToString();
-                            errorMessage = errorJObject["error_description"]?.ToString();
-                        }
-                        else //errorCode + errorMessage
-                        {
-                            errorCode = errorJObject["errorCode"]?.ToString();
-                            errorMessage = errorJObject["errorMessage"]?.ToString();
-                        }
-
-                        apiResponse = new VyApiResponseDto
-                        {
-                            Success = false,
-                            Errors = new VyApiReponseError[]
-                            {
-                                new()
-                                {
-                                    Code = errorCode,
-                                    Message = errorMessage
-                                }
-                            }
-                        };
-                    }
-                    else //"normal" error
-                    {
-                        apiResponse = errorJObject.ToObject<VyApiResponseDto>();
-                    }
+                    apiResponse = JsonConvert.DeserializeObject<VyResponseDto>(response);
                 }
-
-                if (apiResponse == null)
-                    return new VyTaskResult<T>(
-                        new Exception($"API Response Error, but failed to parse the message. (msg = {response})"));
 
                 return new VyTaskResult<T>(VyException.ApiResponseError(apiResponse, statusCode, requestData));
             }
@@ -120,7 +79,7 @@ namespace VenlySDK.Utils
             if (requestData.MustSelectProperty)
             {
                 //SELECT PROPERTY
-                var wrappedResponseRaw = JsonConvert.DeserializeObject<VyApiResponseDto<JObject>>(response);
+                var wrappedResponseRaw = JsonConvert.DeserializeObject<VyResponseDto<JObject>>(response);
                 if (wrappedResponseRaw is {Success: true})
                 {
                     if (wrappedResponseRaw.Data.ContainsKey(requestData.SelectPropertyName))
@@ -139,7 +98,7 @@ namespace VenlySDK.Utils
             }
 
             //NO PROPERTY SELECTION
-            var wrappedResponse = JsonConvert.DeserializeObject<VyApiResponseDto<T>>(response);
+            var wrappedResponse = JsonConvert.DeserializeObject<VyResponseDto<T>>(response);
             if (wrappedResponse is {Success: true})
             {
                 return new VyTaskResult<T>(wrappedResponse.Data);

@@ -3,7 +3,7 @@ using VenlySDK.Core;
 
 namespace VenlySDK.Backends
 {
-    public abstract class VyRequesterBase
+    public abstract class VyRequester
     {
         public abstract VyTask<T> MakeRequest<T>(VyRequestData requestData);
 

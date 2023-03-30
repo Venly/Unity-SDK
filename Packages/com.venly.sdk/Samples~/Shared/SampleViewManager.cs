@@ -5,7 +5,6 @@ using UnityEngine;
 using VenlySDK;
 using VenlySDK.Core;
 using VenlySDK.Models;
-using VenlySDK.Models.Shared;
 
 public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
 {
@@ -28,7 +27,7 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
     void Start()
     {
         if(!Venly.IsInitialized) 
-            VenlyUnity.Initialize();
+            Venly.Initialize();
 
         InitializeViews();
         Loader.Hide();
@@ -150,17 +149,7 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
 
     void OnFirstFrame()
     {
-        switch (VenlySettings.BackendProvider)
-        {
-            case eVyBackendProvider.DevMode:
-            case eVyBackendProvider.Custom:
-                _homeViewId = LandingDevMode;
-                break;
-            case eVyBackendProvider.PlayFab:
-                _homeViewId = LandingAuth;
-                break;
-        }
-
+        _homeViewId = VenlySettings.BackendProvider == eVyBackendProvider.DevMode ? LandingDevMode : LandingAuth;
         SwitchView(_homeViewId);
     }
 }

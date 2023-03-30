@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEditor.PackageManager;
 using UnityEngine;
-using VenlySDK.Models.Shared;
+using VenlySDK.Models;
 
 namespace VenlySDK.Editor.Utils
 {

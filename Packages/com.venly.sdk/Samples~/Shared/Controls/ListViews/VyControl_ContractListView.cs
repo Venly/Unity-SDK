@@ -1,5 +1,5 @@
 using UnityEngine.UIElements;
-using VenlySDK.Models.Nft;
+using VenlySDK.Models;
 using VenlySDK.Utils;
 
 //ITEM

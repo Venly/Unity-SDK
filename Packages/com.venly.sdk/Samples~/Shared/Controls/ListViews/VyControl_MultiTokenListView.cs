@@ -1,6 +1,5 @@
 using UnityEngine.UIElements;
 using VenlySDK.Models;
-using VenlySDK.Models.Shared;
 
 //ITEM
 public class VyControl_MultiTokenListItem : VyControl_ListViewItemBase<VyMultiTokenDto>

@@ -1,6 +1,5 @@
 using UnityEngine.UIElements;
 using VenlySDK.Models;
-using VenlySDK.Models.Wallet;
 using VenlySDK.Utils;
 
 //ITEM

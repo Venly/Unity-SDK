@@ -1,5 +1,7 @@
-﻿using VenlySDK.Core;
-using VenlySDK.Models.Shared;
+﻿using Newtonsoft.Json.Linq;
+using VenlySDK.Core;
+using VenlySDK.Models;
+using VenlySDK.Utils;
 
 namespace VenlySDK
 {
@@ -11,13 +13,10 @@ namespace VenlySDK
 
             public static class Client
             {
-                //public VyTask<VyOfferDto[]> GetOffers()
-                //{
-
-                //}
+               
             }
 
-#if ((UNITY_EDITOR || UNITY_SERVER) || ENABLE_VENLY_API_SERVER) && !DISABLE_VENLY_API_SERVER
+#if (UNITY_EDITOR || UNITY_SERVER || ENABLE_VENLY_API_SERVER) && !ENABLE_VENLY_PLAYFAB
             public static class Server
             {
                

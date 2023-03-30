@@ -1,7 +1,9 @@
 using System;
+using System.Globalization;
+using UnityEngine;
 using UnityEngine.UIElements;
 using VenlySDK;
-using VenlySDK.Models.Shared;
+using VenlySDK.Models;
 
 public class ApiExplorer_TransactionDetailsVC : SampleViewBase<eApiExplorerViewId>
 {

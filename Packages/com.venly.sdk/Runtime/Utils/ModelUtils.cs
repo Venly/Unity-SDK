@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using VenlySDK.Core;
 using VenlySDK.Models;
-using VenlySDK.Models.Shared;
 
 namespace VenlySDK.Utils
 {
