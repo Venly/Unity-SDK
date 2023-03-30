@@ -1,8 +1,7 @@
 using System;
 using UnityEngine.UIElements;
 using VenlySDK;
-using VenlySDK.Models.Nft;
-using VenlySDK.Models.Wallet;
+using VenlySDK.Models;
 
 public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
 {
@@ -168,7 +167,7 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
 
     private void onCick_Mint()
     {
-#if ENABLE_VENLY_DEV_MODE
+#if ENABLE_VENLY_DEVMODE
         if (!Validate()) return;
 
         var reqParams = new VyMintTokenDto()
@@ -177,7 +176,7 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
             TokenId = _sourceTokenType.Id,
             Destinations = new []
             {
-                new VyMintTokenDto.VyMintDestinationDto
+                new VyMintDestinationDto
                 {
                     Address = _txtTargetAddress.value,
                     Amount = int.Parse(_txtAmount.value)

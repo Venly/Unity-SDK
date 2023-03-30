@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
 using VenlySDK;
-using VenlySDK.Models.Nft;
+using VenlySDK.Models;
 
 public class ApiExplorer_ViewTokenTypesVC : SampleViewBase<eApiExplorerViewId>
 {

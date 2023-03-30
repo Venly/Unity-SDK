@@ -3,7 +3,6 @@ using System.Linq;
 using UnityEngine.UIElements;
 using VenlySDK.Core;
 using VenlySDK.Models;
-using VenlySDK.Models.Wallet;
 
 public abstract class ApiExplorer_ViewTokensBaseVC<T, TListView, TListItem> : SampleViewBase<eApiExplorerViewId> 
     where TListView : VyControl_ListViewBase<T, TListItem>

@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
 using VenlySDK.Models;
-using VenlySDK.Models.Shared;
 
 [Serializable]
 public class VenlySettingsSO : ScriptableObject
@@ -17,7 +16,7 @@ public class VenlySettingsSO : ScriptableObject
     [Serializable]
     public class BackendSettings_Custom
     {
-        public string CustomType;
+        public int CustomId;
     }
 
     #endregion

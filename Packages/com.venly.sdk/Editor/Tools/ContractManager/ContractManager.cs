@@ -7,7 +7,6 @@ using UnityEngine;
 using VenlySDK.Core;
 using VenlySDK.Data;
 using VenlySDK.Models;
-using VenlySDK.Models.Nft;
 
 namespace VenlySDK.Editor.Tools.ContractManager
 {
@@ -31,7 +30,7 @@ namespace VenlySDK.Editor.Tools.ContractManager
         }
         #endregion
 
-        [MenuItem("Window/Venly/Contract Manager", priority = 2)]
+        [MenuItem("Window/Venly/Contract Manager")]
         public static void ShowContractManager()
         {
             var types = new List<Type>()
@@ -48,14 +47,14 @@ namespace VenlySDK.Editor.Tools.ContractManager
         private bool _isInitialize = false;
         public bool IsInitialize => _isInitialize;
 
-        private VyProvider_Editor _provider;
+        private VyEditorRequester _requester;
         public ContractManagerView MainView { get; internal set; }
 
         private void Initialize()
         {
             if (_isInitialize) return;
 
-            _provider = new VyProvider_Editor();
+            _requester = new VyEditorRequester();
 
             _isInitialize = true;
         }
@@ -337,7 +336,7 @@ namespace VenlySDK.Editor.Tools.ContractManager
                     contract.ChangeItemState(eVyItemState.Live);
                     contract.FromModel(newContract);
                 })
-                .OnFail(Debug.LogException);
+                ;//.OnFail(Debug.LogException);
         }
 
         private void PushTokenType(VyTokenTypeSO tokenType)

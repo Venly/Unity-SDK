@@ -3,8 +3,7 @@ using System.Linq;
 using UnityEngine.UIElements;
 using VenlySDK;
 using VenlySDK.Core;
-using VenlySDK.Models.Shared;
-using VenlySDK.Models.Wallet;
+using VenlySDK.Models;
 using VenlySDK.Utils;
 
 public class ApiExplorer_WalletDetailsVC : SampleViewBase<eApiExplorerViewId>
@@ -75,13 +74,13 @@ public class ApiExplorer_WalletDetailsVC : SampleViewBase<eApiExplorerViewId>
 
 
     private
-#if ENABLE_VENLY_DEV_MODE
+#if ENABLE_VENLY_DEVMODE
     async
 #endif
     void onClick_Archive()
     {
         #region DevMode Only (SERVER)
-#if ENABLE_VENLY_DEV_MODE
+#if ENABLE_VENLY_DEVMODE
         VyTaskResult<VyWalletMetadataResponseDto> result = null;
         if (!_walletData.Archived)
         {

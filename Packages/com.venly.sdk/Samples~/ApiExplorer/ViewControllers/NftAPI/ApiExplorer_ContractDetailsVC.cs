@@ -2,8 +2,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 using VenlySDK;
-using VenlySDK.Models.Nft;
-using VenlySDK.Models.Shared;
+using VenlySDK.Models;
 using VenlySDK.Utils;
 
 public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
@@ -53,13 +52,13 @@ public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
 
 
     private
-#if ENABLE_VENLY_DEV_MODE
+#if ENABLE_VENLY_DEVMODE
     async
 #endif
     void onClick_Archive()
     {
 #region DevMode Only (SERVER)
-#if ENABLE_VENLY_DEV_MODE
+#if ENABLE_VENLY_DEVMODE
         ViewManager.Loader.Show("Archiving Contract...");
         var result = await Venly.NftAPI.Server.ArchiveContract(_contract.Id);
         ViewManager.Loader.Hide();

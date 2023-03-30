@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using VenlySDK.Core;
 using VenlySDK.Editor.Utils;
-using VenlySDK.Models.Nft;
-using VenlySDK.Models.Shared;
+using VenlySDK.Models;
 
 
 namespace VenlySDK.Editor
@@ -12,11 +12,11 @@ namespace VenlySDK.Editor
     internal static class VenlyEditorAPI
     {
         public static bool IsInitialized = false;
-        private static VyProvider_Editor _provider;
+        private static VyEditorRequester _requester;
 
         static VenlyEditorAPI()
         {
-            _provider = new VyProvider_Editor();
+            _requester = new VyEditorRequester();
             IsInitialized = true;
 
             //Make sure the Task System is initialized
@@ -239,7 +239,7 @@ namespace VenlySDK.Editor
             }
 
             if (!IsInitialized) return new VyException("VenlyEditorAPI not yet initialized!");
-            if (_provider == null) return new VyException("VenlyAPI Editor Provider is null");
+            if (_requester == null) return new VyException("VenlyAPI requester is null");
 
             return null!;
         }
@@ -247,7 +247,9 @@ namespace VenlySDK.Editor
         private static VyTask<T> Request<T>(VyRequestData requestData)
         {
             var ex = VerifyRequest();
-            return ex != null ? VyTask<T>.Failed(ex) : _provider.MakeRequest<T>(requestData);
+            //requestData.StackTrace = new StackTrace(true);
+            //requestData.CallingOrigin = requestData.StackTrace.GetFrame(1).ToString();
+            return ex != null ? VyTask<T>.Failed(ex) : _requester.MakeRequest<T>(requestData);
         }
         #endregion
     }

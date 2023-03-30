@@ -1,6 +1,6 @@
 using System.Globalization;
 using UnityEngine.UIElements;
-using VenlySDK.Models.Shared;
+using VenlySDK.Models;
 
 //ITEM
 public class VyControl_CryptoTokenListItem : VyControl_ListViewItemBase<VyCryptoTokenDto>

@@ -3,8 +3,6 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using VenlySDK;
 using VenlySDK.Models;
-using VenlySDK.Models.Shared;
-using VenlySDK.Models.Wallet;
 
 public class ApiExplorer_TransferMultiTokenVC : SampleViewBase<eApiExplorerViewId>
 {
@@ -180,7 +178,7 @@ public class ApiExplorer_TransferMultiTokenVC : SampleViewBase<eApiExplorerViewI
         var reqParams = new VyExecuteMultiTokenTransferDto()
         {
             Pincode = _txtPincode.text,
-            Request = new VyTransferMultiTokenRequest()
+            Request = new VyTransferMultiRequest()
             {
                 Chain = _sourceWallet?.Chain ?? eVyChain.NotSupported,
                 WalletId = _sourceWallet?.Id,

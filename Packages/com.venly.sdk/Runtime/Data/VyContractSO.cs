@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using VenlySDK.Models;
-using VenlySDK.Models.Nft;
-using VenlySDK.Models.Shared;
 
 namespace VenlySDK.Data
 {

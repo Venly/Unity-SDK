@@ -8,7 +8,6 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using VenlySDK.Models;
-using VenlySDK.Models.Shared;
 
 namespace VenlySDK.Utils
 {
@@ -69,11 +68,6 @@ namespace VenlySDK.Utils
         public static class JWT
         {
             #region VyAccessToken Parsing
-
-            public static void UpdateBearerToken(VyAccessTokenDto bearer)
-            {
-                bearer.JwtInfo = ExtractInfoFromToken(bearer);
-            }
 
             public static VyJwtInfo ExtractInfoFromToken(VyAccessTokenDto bearer)
             {

@@ -38,33 +38,12 @@ namespace VenlySDK.Editor
         private VenlyEditorDataSO _editorDataSO;
         public VenlyEditorDataSO EditorData => _editorDataSO;
 
-        private bool _initInProgress = false;
-
         private void Initialize()
         {
             if (IsInitialized) return;
-            //if (_initInProgress) return;
-
-            _initInProgress = true;
 
             LoadSettings();
             IsInitialized = true;
-            _initInProgress = false;
-        }
-
-        //Can be called to make sure the Settings are properly loaded
-        internal static void Load()
-        {
-            if (_instance == null)
-            {
-                _instance = new VenlyEditorSettings();
-                _instance.Initialize();
-            }
-
-            if (!_instance.SettingsLoaded)
-            {
-                _instance.LoadSettings();
-            }
         }
 
         internal void LoadSettings()
@@ -81,11 +60,11 @@ namespace VenlySDK.Editor
                 _editorDataSO = RetrieveOrCreateResource<VenlyEditorDataSO>("VenlyEditorData",SDKManager.DefaultPublicResourceRoot);
             }
 
-            //VenlyEditorUtils.RestoreBackup(_editorDataSO);
+            VenlyEditorUtils.RestoreBackup(_editorDataSO);
             _editorDataSO.hideFlags = HideFlags.NotEditable;
 
             //Update EditorSettings
-            //SDKManager.Instance.UpdateEditorSettings();
+            SDKManager.Instance.UpdateEditorSettings();
 
             //Save Changes
             EditorUtility.SetDirty(_editorDataSO);
@@ -102,7 +81,7 @@ namespace VenlySDK.Editor
                 _settingsSO.PublicResourceRoot = EditorData.PublicResourceRoot;
             }
 
-            //VenlyEditorUtils.RestoreBackup(_settingsSO);
+            VenlyEditorUtils.RestoreBackup(_settingsSO);
             //_settingsSO.hideFlags = HideFlags.HideInInspector;
             _settingsSO.hideFlags = HideFlags.None;
 

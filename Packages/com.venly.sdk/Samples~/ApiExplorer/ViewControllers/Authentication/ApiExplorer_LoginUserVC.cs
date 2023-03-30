@@ -50,10 +50,10 @@ public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
             .OnSuccess(loginResult =>
             {
                 //Set Authentication Context for this User
-                Venly.SetProviderData(VyProvider_PlayFab.AuthContextDataKey, loginResult.AuthenticationContext);
+                Venly.SetRequesterData(VyPlayfabRequester.AuthContextDataKey, loginResult.AuthenticationContext);
 
                 //Retrieve User Wallet
-                Venly.ProviderExtensions.GetWalletForUser()
+                Venly.BackendExtension.GetWalletForUser()
                     .OnSuccess(wallet =>
                     {
                         //Set Wallet Data

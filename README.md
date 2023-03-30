@@ -1,2 +1,3 @@
 ## Venly SDK for Unity3D
-# Version 1.0.2
+
+# Version 0.1.45 (Alpha)

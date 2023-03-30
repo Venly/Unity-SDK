@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEditor.Build;
@@ -11,7 +10,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using VenlySDK.Core;
 using VenlySDK.Editor.Utils;
-using VenlySDK.Models.Shared;
+using VenlySDK.Models;
 using VenlySDK.Utils;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
@@ -51,7 +50,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
 
         #region MenuItem
 
-        [MenuItem("Window/Venly/SDK Manager", priority = 1)]
+        [MenuItem("Window/Venly/SDK Manager")]
         public static void ShowSdkManager()
         {
             //Make sure there is no panel open at the moment...
@@ -73,7 +72,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
         }
 
 #if VENLYSDK_DEBUG
-        [MenuItem("Window/Venly/Debug/Force Close Manager", priority = -1)]
+        [MenuItem("Window/Venly/Debug/Force Close Manager")]
         public static void ForceCloseManager()
         {
             SDKManagerView wnd = EditorWindow.GetWindow<SDKManagerView>();
@@ -120,14 +119,11 @@ namespace VenlySDK.Editor.Tools.SDKManager
         #endregion
 
 #if VENLYSDK_DEBUG
-        [MenuItem("Window/Venly/Debug/Force SDK Manager Init", priority = -1)]
+        [MenuItem("Window/Venly/Debug/Force SDK Manager Init")]
 #endif
         [InitializeOnLoadMethod]
         static void InitializeStatic()
         {
-            //Load EditorSettings
-            VenlyEditorSettings.Load();
-
             //Initialize the SDK
             //******************
             SDKManager.Instance.Initialize();
@@ -281,7 +277,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
             return taskNotifier.Task;
         }
 
-        private static eVyBackendProvider GetConfiguredBackend()
+        private eVyBackendProvider GetConfiguredBackend()
         {
             var selectedBackend = eVyBackendProvider.DevMode;
 
@@ -304,59 +300,31 @@ namespace VenlySDK.Editor.Tools.SDKManager
             return selectedBackend;
         }
 
-        [MenuItem("Window/Venly/Update Scripting Defines", priority = 3)]
-        public static void UpdateDefines()
+        public void ConfigureForBackend(eVyBackendProvider backend)
         {
-            var defines = GenerateDefinesForProvider(VenlySettings.BackendProvider);
-            var targetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
-            var target = NamedBuildTarget.FromBuildTargetGroup(targetGroup);
+            //Set Defines
+            var currBuildTarget = NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
+            PlayerSettings.GetScriptingDefineSymbols(currBuildTarget, out var currentDefines);
 
-            ApplyDefines(defines, target);
-        }
-
-        private static void ApplyDefines(List<string> defines, NamedBuildTarget target)
-        {
-            PlayerSettings.GetScriptingDefineSymbols(target, out var currentDefines);
+            //Clear Current Venly Defines
             var definesList = currentDefines.ToList();
+            definesList.RemoveAll(define => define.Contains("_VENLY_"));
 
-            //REMOVE PREVIOUS
-            definesList.RemoveAll(d => d.Contains("VENLY_"));
-
-            //ADD NEW ONES
-            definesList.AddRange(defines);
-
-            PlayerSettings.SetScriptingDefineSymbols(target, definesList.ToArray());
-        }
-
-        private static List<string> GenerateDefinesForProvider(eVyBackendProvider backend)
-        {
-            var list =  new List<string>
-            {
-                //"VENLY_API_UNITY",
-                $"ENABLE_VENLY_{backend.GetMemberName().ToUpper()}"
-            };
-
-#if UNITY_EDITOR
+            //Populate with required Defines
             if (backend == eVyBackendProvider.DevMode)
             {
-                list.Add("ENABLE_VENLY_API_SERVER");
+                definesList.Add("ENABLE_VENLY_DEVMODE");
             }
-#endif
+            else if (backend == eVyBackendProvider.PlayFab)
+            {
+                definesList.Add("ENABLE_VENLY_PLAYFAB");
+            }
+            else if (backend == eVyBackendProvider.Custom)
+            {
+                definesList.Add("ENABLE_VENLY_CUSTOM");
+            }
 
-            return list;
-        }
-
-        public static void ConfigureForBackend(eVyBackendProvider backend)
-        {
-            //Generate Defines
-            var definesList = GenerateDefinesForProvider(backend);
-
-            //Apply to BuildTargets
-            ApplyDefines(definesList, NamedBuildTarget.Standalone);
-            ApplyDefines(definesList, NamedBuildTarget.WebGL);
-            ApplyDefines(definesList, NamedBuildTarget.iOS);
-            ApplyDefines(definesList, NamedBuildTarget.Android);
-            ApplyDefines(definesList, NamedBuildTarget.WindowsStoreApps);
+            PlayerSettings.SetScriptingDefineSymbols(currBuildTarget, definesList.ToArray());
 
             //SET BACKEND
             VenlyEditorSettings.Instance.Settings.BackendProvider = backend;
