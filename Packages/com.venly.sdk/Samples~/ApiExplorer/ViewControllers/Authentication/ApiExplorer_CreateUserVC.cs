@@ -1,10 +1,14 @@
+using System.Threading.Tasks;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine.UIElements;
-using VenlySDK;
-using VenlySDK.Core;
-using VenlySDK.Models;
+using Venly;
+using Venly.Core;
+using Venly.Models.Shared;
+using Venly.Models.Wallet;
 
 #if ENABLE_VENLY_PLAYFAB
-using VenlySDK.Backends.PlayFab;
+using UnityEngine;
+using Venly.Backends.PlayFab;
 #endif
 
 public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
@@ -36,8 +40,8 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
 
     protected override void OnDeactivate()
     {
-        
     }
+
 
 #if ENABLE_VENLY_PLAYFAB
     private void onClick_CreateUser()
@@ -52,10 +56,10 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
             .OnSuccess(loginResult =>
             {
                 //Set Authentication Context for this User
-                Venly.SetRequesterData(VyPlayfabRequester.AuthContextDataKey, loginResult.AuthenticationContext);
+                VenlyAPI.SetProviderData(VyProvider_PlayFab.AuthContextDataKey, loginResult.AuthenticationContext);
 
                 //Wallet Creation Params
-                var createParams = new VyCreateWalletDto
+                var createParams = new VyCreateWalletRequest()
                 {
                     Chain = eVyChain.Matic,
                     Description = $"API Explorer wallet created for \'{VenlySettings.BackendProvider}\' user.\n(PlayFabId={loginResult.PlayFabId})",
@@ -65,7 +69,7 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
                 };
 
                 //Create Wallet for User
-                Venly.BackendExtension.CreateWalletForUser(createParams)
+                VenlyAPI.ProviderExtensions.CreateWalletForUser(createParams)
                     .OnSuccess(wallet =>
                     {
                         //Set Wallet Data

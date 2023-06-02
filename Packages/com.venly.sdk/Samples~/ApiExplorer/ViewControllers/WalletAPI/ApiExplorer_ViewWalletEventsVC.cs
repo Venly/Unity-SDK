@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.UIElements;
-using VenlySDK;
-using VenlySDK.Models;
+using Venly.Models;
+using Venly.Models.Wallet;
 
 public class ApiExplorer_ViewWalletEventsVC : SampleViewBase<eApiExplorerViewId>
 {

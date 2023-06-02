@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
-using VenlySDK.Models;
+using Venly.Models.Shared;
 
-namespace VenlySDK.Data
+namespace Venly.Data
 {
     public class VyContractSO : VyItemSO
     {
@@ -34,7 +34,7 @@ namespace VenlySDK.Data
                 Description = Description,
                 ExternalUrl = ExternalUrl,
                 Id = Id,
-                Image = ImageUrl,
+                ImageUrl = ImageUrl,
                 Media = Media.Select(e => e.ToModel()).ToArray(),
                 Name = Name,
                 Owner = Owner,

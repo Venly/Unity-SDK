@@ -1,10 +1,10 @@
 using System;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
-using VenlySDK;
-using VenlySDK.Models;
-using VenlySDK.Utils;
+using Venly;
+using Venly.Models.Nft;
+using Venly.Models.Shared;
+using Venly.Utils;
 
 public class ApiExplorer_TokenTypeDetailsVC : SampleViewBase<eApiExplorerViewId>
 {
@@ -70,7 +70,7 @@ public class ApiExplorer_TokenTypeDetailsVC : SampleViewBase<eApiExplorerViewId>
         if (force)
         {
             ViewManager.Loader.Show("Refreshing TokenType...");
-            Venly.NftAPI.Client.GetTokenType(_sourceContract.Id, _tokenType.Id)
+            VenlyAPI.Nft.GetTokenType(_sourceContract.Id, _tokenType.Id)
                 .OnSuccess(tokenType =>
                 {
                     _tokenType = tokenType;
@@ -93,7 +93,7 @@ public class ApiExplorer_TokenTypeDetailsVC : SampleViewBase<eApiExplorerViewId>
         //Retrieve Image
         if (_tokenTexture == null || _lastTokenId != _tokenType.Id)
         {
-            VenlyUnityUtils.DownloadImage(_tokenType.Image)
+            VenlyUnityUtils.DownloadImage(_tokenType.ImageUrl)
                 .OnComplete(result =>
                 {
                     ToggleElement("img-container", result.Success);

@@ -1,20 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Newtonsoft.Json;
+using Packages.com.venly.sdk.Editor;
 using UnityEditor;
-using UnityEditor.Build;
 using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Networking;
-using VenlySDK.Core;
-using VenlySDK.Editor.Utils;
-using VenlySDK.Models;
-using VenlySDK.Utils;
-using PackageInfo = UnityEditor.PackageManager.PackageInfo;
+using Venly.Core;
+using Venly.Editor.Utils;
+using Venly.Models.Shared;
+using Venly.Utils;
 
-namespace VenlySDK.Editor.Tools.SDKManager
+namespace Venly.Editor.Tools.SDKManager
 {
     internal class SDKManager
     {
@@ -46,11 +44,9 @@ namespace VenlySDK.Editor.Tools.SDKManager
 
         #endregion
 
-        private VenlyEditorDataSO.SDKManagerData _managerData => VenlyEditorSettings.Instance.EditorData.SDKManager;
-
         #region MenuItem
 
-        [MenuItem("Window/Venly/SDK Manager")]
+        [MenuItem("Window/Venly/SDK Manager", priority = 1)]
         public static void ShowSdkManager()
         {
             //Make sure there is no panel open at the moment...
@@ -72,7 +68,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
         }
 
 #if VENLYSDK_DEBUG
-        [MenuItem("Window/Venly/Debug/Force Close Manager")]
+        [MenuItem("Window/Venly/Debug/Force Close Manager", priority = -1)]
         public static void ForceCloseManager()
         {
             SDKManagerView wnd = EditorWindow.GetWindow<SDKManagerView>();
@@ -83,179 +79,136 @@ namespace VenlySDK.Editor.Tools.SDKManager
         }
 #endif
 
-#endregion
+        #endregion
 
-#region Properties
+        #region Properties
 
         public bool IsInitialized { get; private set; }
         public bool IsAuthenticated { get; private set; }
-        public bool SettingsLoaded { get; private set; }
-
-        public VenlyEditorDataSO EditorSettings => VenlyEditorSettings.Instance.EditorData;
+        //public bool SettingsLoaded { get; private set; }
 
         public static readonly string URL_GitHubIssues = @"https://github.com/ArkaneNetwork/Unity-SDK/issues";
         public static readonly string URL_ChangeLog = @"https://github.com/ArkaneNetwork/Unity-SDK/releases";
         public static readonly string URL_Discord = @"https://discord.gg/rKUFbUWMaw";
         public static readonly string URL_Guide = @"https://docs.venly.io/venly-unity-sdk/";
 
-        private PackageInfo _packageInfo;
-        public static readonly string DefaultPublicResourceRoot = "Assets\\Resources\\";
-        public static readonly string SdkPackageRoot = "Packages\\com.venly.sdk\\";
+        #endregion
 
-        public static readonly string URL_GitRepository = @"git+https://github.com/ArkaneNetwork/Unity-SDK.git?path=Packages/com.venly.sdk";
-        public static readonly string URL_GitReleases = @"https://api.github.com/repos/ArkaneNetwork/Unity-SDK/releases";
+        #region Events
 
-        //public static readonly string URL_GitRepository = @"git+https://github.com/Tomiha/UnityGit.git?path=com.venly.sdk";
-        //public static readonly string URL_GitReleases = @"https://api.github.com/repos/Tomiha/UnityGit/releases";
-
-#endregion
-
-#region Events
-
-        public event Action OnSettingsLoaded;
+        //public event Action OnSettingsLoaded;
         public event Action<bool> OnAuthenticatedChanged;
         public event Action OnInitialized;
 
         #endregion
 
-#if VENLYSDK_DEBUG
-        [MenuItem("Window/Venly/Debug/Force SDK Manager Init")]
-#endif
-        [InitializeOnLoadMethod]
-        static void InitializeStatic()
-        {
-            //Initialize the SDK
-            //******************
-            SDKManager.Instance.Initialize();
-        }
 
         //Initialization of SDK (including Settings)
-        private async void Initialize()
+        public void Initialize()
         {
-            //Thread Context
-            VyTaskBase.Initialize();
-
-            //Load Settings
-            SettingsLoaded = false;
-            VenlyEditorSettings.Instance.LoadSettings();
-            if (VenlyEditorSettings.Instance.SettingsLoaded)
-            {
-                SettingsLoaded = true;
-                UpdateEditorSettings();
-                OnSettingsLoaded?.Invoke();
-            }
-            else
-            {
-                throw new VyException("An error occurred while initializing the SDK Manager (Load Settings)");
-            }
-
             //Authenticate
             IsAuthenticated = false;
             if (VenlySettings.HasCredentials)
             {
-                await Authenticate().AwaitResult();
+                Authenticate()
+                    .OnComplete(result =>
+                    {
+                        IsInitialized = true;
+                        OnInitialized?.Invoke();
+                    });
             }
-
-            IsInitialized = true;
-            OnInitialized?.Invoke();
-        }
-
-#region MANAGER FUNCTIONS
-        private void ResetSettings()
-        {
-            var performReset = true;
-            if (EditorPrefs.HasKey("com.venly.sdk.last_settings_reset"))
+            else
             {
-                var lastResetVersion = EditorPrefs.GetString("com.venly.sdk.last_settings_reset");
-                performReset = lastResetVersion != EditorSettings.Version;
+                IsInitialized = true;
+                OnInitialized?.Invoke();
+            }
+        }
+
+        internal bool VerifyAuthentication()
+        {
+            if (!VenlySettings.HasCredentials)
+            {
+                if (IsAuthenticated)
+                {
+                    IsAuthenticated = false;
+                    OnAuthenticatedChanged?.Invoke(IsAuthenticated);
+                }
             }
 
-            if (!performReset) return;
-
-            //Editor Settings Reset
-            EditorSettings.SupportedChainsNft = Array.Empty<eVyChain>();
-            EditorSettings.SupportedChainsWallet = Array.Empty<eVyChain>();
-
-            EditorPrefs.SetString("com.venly.sdk.last_settings_reset", EditorSettings.Version);
+            return IsAuthenticated;
         }
 
-        internal void UpdateVenlySettings(VenlySettingsSO settingsSo)
-        {
-            //Verify Selected Backend
-            settingsSo.BackendProvider = GetConfiguredBackend();
-        }
-
-        internal void UpdateEditorSettings()
-        {
-            //Get Package Information
-            _packageInfo = PackageInfo.FindForAssembly(Assembly.GetExecutingAssembly());
-            EditorSettings.Version = $"v{_packageInfo.version}";
-
-            //Check if some Settings need to be reset (after new version for example)
-            ResetSettings();
-
-            //Public Resource Root
-            if (string.IsNullOrEmpty(EditorSettings.PublicResourceRoot))
-                EditorSettings.PublicResourceRoot = DefaultPublicResourceRoot;
-
-            //Verify Selected Backend
-            EditorSettings.SDKManager.SelectedBackend = GetConfiguredBackend();
-            EditorSettings.SDKManager.UnappliedSettings = false;
-        }
-
+        #region MANAGER FUNCTIONS
         //Only called if Authentication succeeded
-        internal void UpdateEditorSettings_PostAuthentication(string clientId, string clientSecret, VyAccessTokenDto token)
+        internal void UpdateEditorSettings_PostAuthentication(string clientId, string clientSecret,
+            VyAccessTokenDto token)
         {
-            //VenlySettings
-            VenlySettings.SetCredentials(clientId, clientSecret);
-
-            //JWT Decoding
-            var jwtInfo = VenlyUtils.JWT.ExtractInfoFromToken(token);
-            VenlySettings.SetAccessAndEnvironment(jwtInfo);
-
-            //Current ClientId
-            EditorSettings.SDKManager.CurrentClientId = clientId;
-            AssetDatabase.SaveAssetIfDirty(EditorSettings);
-
-            //Refresh SupportedChainsWallet (ASYNC)
-            if (EditorSettings.SupportedChainsWallet == null
-                || EditorSettings.SupportedChainsWallet.Length == 0)
+            try
             {
-                VenlyEditorAPI.GetChainsWALLET()
-                    .OnSuccess(chains =>
-                    {
-                        EditorSettings.SupportedChainsWallet = chains;
-                        AssetDatabase.SaveAssetIfDirty(EditorSettings);
-                    });
+                //VenlySettings
+                VenlySettings.SetCredentials(clientId, clientSecret);
+
+                //JWT Decoding
+                var jwtInfo = VenlyUtils.JWT.ExtractInfoFromToken(token);
+                VenlySettings.SetAccessAndEnvironment(jwtInfo);
+
+                //Current ClientId
+                VyEditorData.EditorSettings.SDKManager.CurrentClientId = clientId;
+                VyEditorData.SaveEditorSetting();
+
+                //Refresh SupportedChainsWallet (ASYNC)
+                if (VyEditorData.EditorSettings.SupportedChainsWallet == null
+                    || VyEditorData.EditorSettings.SupportedChainsWallet.Length == 0)
+                {
+                    VenlyEditorAPI.GetChainsWALLET()
+                        .OnSuccess(chains =>
+                        {
+                            VyEditorData.EditorSettings.SupportedChainsWallet = chains;
+                            VyEditorData.SaveEditorSetting();
+                        });
+                }
+
+                //Refresh SupportedChainsNft (ASYNC)
+                if (VyEditorData.EditorSettings.SupportedChainsNft == null
+                    || VyEditorData.EditorSettings.SupportedChainsNft.Length == 0)
+                {
+                    VenlyEditorAPI.GetChainsNFT()
+                        .OnSuccess(chains =>
+                        {
+                            VyEditorData.EditorSettings.SupportedChainsNft = chains;
+                            VyEditorData.SaveEditorSetting();
+                        });
+                }
             }
-
-            //Refresh SupportedChainsNft (ASYNC)
-            if (EditorSettings.SupportedChainsNft == null
-                || EditorSettings.SupportedChainsNft.Length == 0)
+            catch (Exception ex)
             {
-                VenlyEditorAPI.GetChainsNFT()
-                    .OnSuccess(chains =>
-                    {
-                        EditorSettings.SupportedChainsNft = chains;
-                        AssetDatabase.SaveAssetIfDirty(EditorSettings);
-                    });
+                int k = 0;
             }
         }
 
         public VyTask Authenticate()
         {
-            //if (!IsInitialized) VyTask.Failed(new VyException("Authentication Failed. SDK Manager not yet initialized!"));
-            if(!SettingsLoaded) return VyTask.Failed(new VyException("Authentication Failed. Settings not yet loaded!"));
-            if (!VenlySettings.HasCredentials) return VyTask.Failed(new VyException("Authentication Failed. Credentials are not available!"));
+            IsAuthenticated = false;
+
+            VyException potentialException = null;
+            if (!VyEditorData.IsLoaded) potentialException = new VyException("Authentication Failed. Settings not yet loaded!");
+            if (!VenlySettings.HasCredentials) potentialException = new VyException("Authentication Failed. Credentials are not available!");
+            if (potentialException != null)
+            {
+                OnAuthenticatedChanged?.Invoke(IsAuthenticated);
+                return VyTask.Failed(potentialException);
+            }
 
             return Authenticate(VenlySettings.ClientId, VenlySettings.ClientSecret);
         }
 
         //SDK Manager Authentication (Sets IsAuthenticated if success)
-        public VyTask Authenticate(string clientId, string clientSecret)
+        private VyTask Authenticate(string clientId, string clientSecret)
         {
             IsAuthenticated = false;
-            VenlyEditorSettings.Instance.EditorData.SDKManager.CurrentClientId = null;
+
+            VyEditorData.EditorSettings.SDKManager.CurrentClientId = null;
+            //VenlyEditorSettings.Instance.EditorData.SDKManager.CurrentClientId = null;
 
             var taskNotifier = VyTask.Create("SDKManager_Authenticate");
 
@@ -267,7 +220,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
                     {
                         UpdateEditorSettings_PostAuthentication(clientId, clientSecret, result.Data);
                     }
-                    
+
                     //Debug.Log($"[SDK MANAGER] Authentication Completed. IsAuthenticated={IsAuthenticated}");
 
                     OnAuthenticatedChanged?.Invoke(IsAuthenticated);
@@ -277,64 +230,11 @@ namespace VenlySDK.Editor.Tools.SDKManager
             return taskNotifier.Task;
         }
 
-        private eVyBackendProvider GetConfiguredBackend()
-        {
-            var selectedBackend = eVyBackendProvider.DevMode;
-
-            var currBuildTarget = NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-            PlayerSettings.GetScriptingDefineSymbols(currBuildTarget, out var currentDefines);
-
-            //Search
-            var definesList = currentDefines.ToList();
-            definesList.RemoveAll(define => !define.Contains("_VENLY_"));
-
-            if (definesList.Count > 0)
-            {
-                if (definesList.Any(define => define.EndsWith("DEVMODE"))) selectedBackend = eVyBackendProvider.DevMode;
-                else if(definesList.Any(define => define.EndsWith("PLAYFAB"))) selectedBackend = eVyBackendProvider.PlayFab;
-                else if (definesList.Any(define => define.EndsWith("CUSTOM"))) selectedBackend = eVyBackendProvider.Custom;
-                else ConfigureForBackend(selectedBackend);
-            }
-            else ConfigureForBackend(selectedBackend);
-
-            return selectedBackend;
-        }
-
-        public void ConfigureForBackend(eVyBackendProvider backend)
-        {
-            //Set Defines
-            var currBuildTarget = NamedBuildTarget.FromBuildTargetGroup(EditorUserBuildSettings.selectedBuildTargetGroup);
-            PlayerSettings.GetScriptingDefineSymbols(currBuildTarget, out var currentDefines);
-
-            //Clear Current Venly Defines
-            var definesList = currentDefines.ToList();
-            definesList.RemoveAll(define => define.Contains("_VENLY_"));
-
-            //Populate with required Defines
-            if (backend == eVyBackendProvider.DevMode)
-            {
-                definesList.Add("ENABLE_VENLY_DEVMODE");
-            }
-            else if (backend == eVyBackendProvider.PlayFab)
-            {
-                definesList.Add("ENABLE_VENLY_PLAYFAB");
-            }
-            else if (backend == eVyBackendProvider.Custom)
-            {
-                definesList.Add("ENABLE_VENLY_CUSTOM");
-            }
-
-            PlayerSettings.SetScriptingDefineSymbols(currBuildTarget, definesList.ToArray());
-
-            //SET BACKEND
-            VenlyEditorSettings.Instance.Settings.BackendProvider = backend;
-        }
-
         public VyTask<string> GetLatestVersion()
         {
             var taskNotifier = VyTask<string>.Create();
 
-            UnityWebRequest request = UnityWebRequest.Get(URL_GitReleases);
+            UnityWebRequest request = UnityWebRequest.Get(VyEditorData.URL_GitReleases);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SendWebRequest().completed += (op) =>
             {
@@ -361,23 +261,24 @@ namespace VenlySDK.Editor.Tools.SDKManager
 
             return taskNotifier.Task;
         }
-        
+
         public void UpdateSDK(string targetVersion)
         {
-            VenlySDKUpdater.Instance.UpdateSDK(targetVersion);
+            //Legacy...
+            //VenlySDKUpdater.Instance.UpdateSDK(targetVersion);
 
             //Prepare for Update
-            VenlyEditorUtils.StoreBackup(VenlyEditorSettings.Instance.Settings);
-            VenlyEditorUtils.StoreBackup(VenlyEditorSettings.Instance.EditorData);
+            VenlyEditorUtils.StoreBackup(VyEditorData.EditorSettings);
+            VenlyEditorUtils.StoreBackup(VyEditorData.RuntimeSettings);
 
             //Update Link
             var packages = new List<string>();
 
             //Venly SDK
-            packages.Add($"{URL_GitRepository}#{targetVersion}");
+            packages.Add($"{VyEditorData.URL_GitRepository}#{targetVersion}");
 
             Client.AddAndRemove(packages.ToArray(), null);
         }
-#endregion
+        #endregion
     }
 }

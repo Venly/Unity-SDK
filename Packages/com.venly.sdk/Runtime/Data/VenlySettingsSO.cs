@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-using VenlySDK.Models;
+using Venly.Models.Shared;
 
 [Serializable]
 public class VenlySettingsSO : ScriptableObject
@@ -16,7 +16,7 @@ public class VenlySettingsSO : ScriptableObject
     [Serializable]
     public class BackendSettings_Custom
     {
-        public int CustomId;
+        public string CustomType;
     }
 
     #endregion
@@ -30,7 +30,6 @@ public class VenlySettingsSO : ScriptableObject
     public bool HasMarketApiAccess;
 
     [HideInInspector] public string SdkPackageRoot;
-
     [HideInInspector] public string PublicResourceRoot;
 #endif
 
@@ -40,11 +39,4 @@ public class VenlySettingsSO : ScriptableObject
     //Backend Settings
     public BackendSettings_PlayFab PlayFabBackendSettings = new();
     public BackendSettings_Custom CustomBackendSettings = new();
-
-
-    public void ConfigureBackendProvider()
-    {
-        Debug.Log("Todo");
-        //VenlySettings.ConfigureForBackend();
-    }
 }

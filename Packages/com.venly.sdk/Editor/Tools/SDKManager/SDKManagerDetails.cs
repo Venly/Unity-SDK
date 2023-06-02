@@ -1,8 +1,9 @@
+using Packages.com.venly.sdk.Editor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using VenlySDK.Editor.Utils;
+using Venly.Editor.Utils;
 
-namespace VenlySDK.Editor.Tools.SDKManager
+namespace Venly.Editor.Tools.SDKManager
 {
     public class SDKManagerDetails : VisualElement
     {
@@ -57,7 +58,7 @@ namespace VenlySDK.Editor.Tools.SDKManager
 
         private void RefreshDetails()
         {
-            var currentVersion = VenlyEditorSettings.Instance.EditorData.Version;
+            var currentVersion = VyEditorData.EditorSettings.Version;
             _lblVersion.text = $"SDK {currentVersion}";
 
             bool canUpdate = false;

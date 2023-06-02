@@ -1,7 +1,9 @@
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
-using VenlySDK.Models;
+using Venly.Models;
+using Venly.Models.Shared;
+using Venly.Models.Wallet;
 
 public class ApiExplorer_MultiTokenDetailsVC : SampleViewBase<eApiExplorerViewId>
 {

@@ -9,10 +9,10 @@ using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
-using VenlySDK.Models;
-using VenlySDK.Utils;
+using Venly.Models.Shared;
+using Venly.Utils;
 
-namespace VenlySDK.Editor.Utils
+namespace Venly.Editor.Utils
 {
     internal static class VenlyEditorUtils
     {

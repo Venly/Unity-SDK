@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
-using VenlySDK.Models;
+using Venly.Models.Nft;
+using Venly.Models.Shared;
 
-namespace VenlySDK.Data
+namespace Venly.Data
 {
     public class VyTokenTypeSO : VyItemSO
     {
@@ -16,9 +17,9 @@ namespace VenlySDK.Data
             public string Name = "";
             public string Value = "";
 
-            public VyTokenAttribute ToModel()
+            public VyTokenAttributeDto ToModel()
             {
-                return new VyTokenAttribute()
+                return new VyTokenAttributeDto()
                 {
                     Type = Type,
                     Name = Name,
@@ -26,7 +27,7 @@ namespace VenlySDK.Data
                 };
             }
 
-            public static _TokenAttribute FromModel(VyTokenAttribute att)
+            public static _TokenAttribute FromModel(VyTokenAttributeDto att)
             {
                 return new _TokenAttribute()
                 {
@@ -50,7 +51,7 @@ namespace VenlySDK.Data
         public string ImagePreview;
 
         [VyItemField(eVyItemTrait.LiveReadOnly)]
-        public long CurrentSupply;
+        public int CurrentSupply;
 
         [VyItemField] public bool Fungible;
         [VyItemField] public bool Burnable;
@@ -82,9 +83,9 @@ namespace VenlySDK.Data
                 ExternalUrl = ExternalUrl,
                 Fungible = Fungible,
                 Id = Id,
-                Image = ImageUrl,
-                ImagePreview = ImagePreview,
-                ImageThumbnail = ImageThumbnail,
+                ImageUrl = ImageUrl,
+                ImagePreviewUrl = ImagePreview,
+                ImageThumbnailUrl = ImageThumbnail,
                 TransactionHash = TransactionHash
             };
         }

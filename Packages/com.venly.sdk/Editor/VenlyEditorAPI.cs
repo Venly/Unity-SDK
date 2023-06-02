@@ -1,26 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
-using VenlySDK.Core;
-using VenlySDK.Editor.Utils;
-using VenlySDK.Models;
+using Packages.com.venly.sdk.Editor;
+using Venly.Core;
+using Venly.Models.Nft;
+using Venly.Models.Shared;
+using Venly.Editor.Utils;
 
-
-namespace VenlySDK.Editor
+namespace Venly.Editor
 {
 #if UNITY_EDITOR
     internal static class VenlyEditorAPI
     {
         public static bool IsInitialized = false;
-        private static VyEditorRequester _requester;
+        private static VyProvider_Editor _provider;
 
         static VenlyEditorAPI()
         {
-            _requester = new VyEditorRequester();
+            _provider = new VyProvider_Editor();
             IsInitialized = true;
-
-            //Make sure the Task System is initialized
-            VyTaskBase.Initialize();
         }
 
         #region AUTH
@@ -51,7 +48,7 @@ namespace VenlySDK.Editor
         /// [/api/minter/contracts]
         /// <param name="reqParams">Required parameters for the request</param>
         /// <returns>The deployed NFT Contract</returns>
-        public static VyTask<VyContractDto> CreateContract(VyCreateContractDto reqParams)
+        public static VyTask<VyContractDto> CreateContract(VyCreateContractRequest reqParams)
         {
             var reqData = VyRequestData.Post("/api/minter/contracts", eVyApiEndpoint.Nft)
                 .AddJsonContent(reqParams);
@@ -64,9 +61,9 @@ namespace VenlySDK.Editor
         /// </summary>
         /// <param name="reqParams">Required parameters for the request</param>
         /// <returns>The deployed NFT Token-Type (Template)</returns>
-        public static VyTask<VyTokenTypeDto> CreateTokenType(VyCreateTokenTypeDto reqParams)
+        public static VyTask<VyTokenTypeDto> CreateTokenType(int contractId, VyCreateTokenTypeRequest reqParams)
         {
-            var reqData = VyRequestData.Post($"/api/minter/contracts/{reqParams.ContractId}/token-types", eVyApiEndpoint.Nft)
+            var reqData = VyRequestData.Post($"/api/minter/contracts/{contractId}/token-types", eVyApiEndpoint.Nft)
                 .AddJsonContent(reqParams);
             return Request<VyTokenTypeDto>(reqData);
         }
@@ -77,9 +74,9 @@ namespace VenlySDK.Editor
         /// </summary>
         /// <param name="reqParams">Required parameters for the request</param>
         /// <returns>Updated Token-Type (Template)</returns>
-        public static VyTask<VyTokenTypeMetadataDto> UpdateTokenTypeMetadata(VyUpdateTokenTypeMetadataDto reqParams)
+        public static VyTask<VyTokenTypeMetadataDto> UpdateTokenTypeMetadata(int contractId, int tokenTypeId, VyUpdateTokenTypeMetadataRequest reqParams)
         {
-            var reqData = VyRequestData.Put($"/api/contracts/{reqParams.ContractId}/token-types/{reqParams.TokenTypeId}/metadata", eVyApiEndpoint.Nft)
+            var reqData = VyRequestData.Put($"/api/contracts/{contractId}/token-types/{tokenTypeId}/metadata", eVyApiEndpoint.Nft)
                 .AddJsonContent(reqParams);
             return Request<VyTokenTypeMetadataDto>(reqData);
         }
@@ -91,9 +88,9 @@ namespace VenlySDK.Editor
         /// </summary>
         /// <param name="reqParams">Required parameters for the request</param>
         /// <returns>Updated Contract Metadata</returns>
-        public static VyTask<VyContractMetadataDto> UpdateContractMetadata(VyUpdateContractMetadataDto reqParams)
+        public static VyTask<VyContractMetadataDto> UpdateContractMetadata(int contractId, VyUpdateContractMetadataRequest reqParams)
         {
-            var reqData = VyRequestData.Patch($"/api/contracts/{reqParams.ContractId}/metadata", eVyApiEndpoint.Nft)
+            var reqData = VyRequestData.Patch($"/api/contracts/{contractId}/metadata", eVyApiEndpoint.Nft)
                 .AddJsonContent(reqParams);
             return Request<VyContractMetadataDto>(reqData);
         }
@@ -232,14 +229,14 @@ namespace VenlySDK.Editor
         #region Request Helpers
         private static Exception VerifyRequest()
         {
-            if (!VenlyEditorSettings.Instance.SettingsLoaded)
+            if (!VyEditorData.IsLoaded)
             {
-                VenlySettings.Load(); //Force Settings Load
+                VyEditorData.Reload();
                 VenlyDebugEd.LogDebug("[VenlyEditorAPI] VenlySettings Force Loading", 1);
             }
 
             if (!IsInitialized) return new VyException("VenlyEditorAPI not yet initialized!");
-            if (_requester == null) return new VyException("VenlyAPI requester is null");
+            if (_provider == null) return new VyException("VenlyAPI Editor Provider is null");
 
             return null!;
         }
@@ -247,9 +244,7 @@ namespace VenlySDK.Editor
         private static VyTask<T> Request<T>(VyRequestData requestData)
         {
             var ex = VerifyRequest();
-            //requestData.StackTrace = new StackTrace(true);
-            //requestData.CallingOrigin = requestData.StackTrace.GetFrame(1).ToString();
-            return ex != null ? VyTask<T>.Failed(ex) : _requester.MakeRequest<T>(requestData);
+            return ex != null ? VyTask<T>.Failed(ex) : _provider.MakeRequest<T>(requestData);
         }
         #endregion
     }
