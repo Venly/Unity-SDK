@@ -18,9 +18,6 @@ namespace Venly.Editor
         {
             _provider = new VyProvider_Editor();
             IsInitialized = true;
-
-            //Make sure the Task System is initialized
-            VyTaskBase.Initialize();
         }
 
         #region AUTH

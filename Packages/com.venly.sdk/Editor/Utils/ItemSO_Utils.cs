@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -33,11 +34,18 @@ namespace Venly.Editor
             newContract.name = contractName;
             newContract.ChangeItemState(eVyItemState.Local);
 
-            //todo: move to editor assembly part
-            AssetDatabase.CreateAsset(newContract, $"{VenlySettings.PublicResourceRoot}/{contractName}.asset");
+            try
+            {
+                //todo: move to editor assembly part
+                AssetDatabase.CreateAsset(newContract, $"{VenlySettings.PublicResourceRoot}/{contractName}.asset");
 
-            EditorUtility.SetDirty(newContract);
-            AssetDatabase.SaveAssetIfDirty(newContract);
+                EditorUtility.SetDirty(newContract);
+                AssetDatabase.SaveAssetIfDirty(newContract);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
 
             return newContract;
         }
@@ -124,10 +132,17 @@ namespace Venly.Editor
 
             parent.TokenTypes.Add(newTokenType);
 
-            AssetDatabase.AddObjectToAsset(newTokenType, parent);
+            try
+            {
+                AssetDatabase.AddObjectToAsset(newTokenType, parent);
 
-            EditorUtility.SetDirty(parent);
-            AssetDatabase.SaveAssetIfDirty(parent);
+                EditorUtility.SetDirty(parent);
+                AssetDatabase.SaveAssetIfDirty(parent);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
 
             return newTokenType;
         }
