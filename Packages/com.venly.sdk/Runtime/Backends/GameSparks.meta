@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Packages/com.venly.sdk/Runtime/Backends/GameSparks.meta
 guid: 5fbb3775e9f265e49935bc41c2222c7c
+========
+guid: 5b8e7cbfeb2e25245924d0d571b86681
+>>>>>>>> main:Packages/com.venly.sdk/Runtime/Plugins/Debug.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
