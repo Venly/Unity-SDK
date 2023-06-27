@@ -90,7 +90,7 @@ namespace Venly.Editor.Tools.SDKManager
         public static readonly string URL_GitHubIssues = @"https://github.com/ArkaneNetwork/Unity-SDK/issues";
         public static readonly string URL_ChangeLog = @"https://github.com/ArkaneNetwork/Unity-SDK/releases";
         public static readonly string URL_Discord = @"https://discord.gg/rKUFbUWMaw";
-        public static readonly string URL_Guide = @"https://docs.venly.io/venly-unity-sdk/";
+        public static readonly string URL_Guide = @"https://docs.venly.io/venly-gaming-toolkit/";
 
         #endregion
 
@@ -182,7 +182,7 @@ namespace Venly.Editor.Tools.SDKManager
             }
             catch (Exception ex)
             {
-                int k = 0;
+                VenlyLog.Exception(ex, "SDK Manager >> Post Authentication");
             }
         }
 
@@ -255,6 +255,32 @@ namespace Venly.Editor.Tools.SDKManager
                 }
                 else
                 {
+                    ////Fallback
+                    //UnityWebRequest request = UnityWebRequest.Get(VyEditorData.URL_GitLatestFallback);
+                    //request.downloadHandler = new DownloadHandlerBuffer();
+                    //request.SendWebRequest().completed += (op) =>
+                    //{
+                    //    if (request.isDone && request.result == UnityWebRequest.Result.Success)
+                    //    {
+                    //        try
+                    //        {
+                    //            var latestVersion = request.downloadHandler.text;
+
+                    //            if (string.IsNullOrEmpty(latestVersion))
+                    //                taskNotifier.NotifyFail("Latest version not found");
+                    //            else taskNotifier.NotifySuccess(latestVersion);
+                    //        }
+                    //        catch (Exception ex)
+                    //        {
+                    //            taskNotifier.NotifyFail(ex);
+                    //        }
+                    //    }
+                    //    else
+                    //    {
+                    //        taskNotifier.NotifyFail("Failed to retrieve SDK release list");
+                    //    }
+                    //};
+
                     taskNotifier.NotifyFail("Failed to retrieve SDK release list");
                 }
             };

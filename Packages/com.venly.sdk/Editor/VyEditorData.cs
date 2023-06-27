@@ -23,9 +23,11 @@ namespace Packages.com.venly.sdk.Editor
 #if VENLY_STAGING_REPO
         public const string URL_GitRepository = @"git+https://github.com/Tomiha/UnityGit.git?path=com.venly.sdk";
         public const string URL_GitReleases = @"https://api.github.com/repos/Tomiha/UnityGit/releases";
+        public const string URL_GitLatestFallback = @"https://raw.githubusercontent.com/Tomiha/UnityGit/main/com_venly_sdk_latest.txt";
 #else
         public const string URL_GitRepository = @"git+https://github.com/ArkaneNetwork/Unity-SDK.git?path=Packages/com.venly.sdk";
         public const string URL_GitReleases = @"https://api.github.com/repos/ArkaneNetwork/Unity-SDK/releases";
+        public const string URL_GitLatestFallback = @"https://raw.githubusercontent.com/ArkaneNetwork/Unity-SDK/main/Packages/com_venly_sdk_latest.txt";
 #endif
         #endregion
 

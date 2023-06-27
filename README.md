@@ -1,9 +1,15 @@
 ## Venly SDK for Unity3D
 
-# Version 1.0.5
+# Version 1.0.6
 - Wallet API
 - NFT API
 - Market API
 
+# Backend Provider Support
+- DevMode (Editor Only)
+- PlayFab
+- Beamable
+- Custom
+
 # Documentation
-Documentation can be found [here](https://docs.venly.io/venly-unity-sdk/)
+Documentation can be found [here](https://docs.venly.io/venly-gaming-toolkit/)
