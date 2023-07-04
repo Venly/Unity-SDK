@@ -1,6 +1,6 @@
 ## Venly SDK for Unity3D
 
-# Version 1.0.6
+# Version 1.0.7
 - Wallet API
 - NFT API
 - Market API
