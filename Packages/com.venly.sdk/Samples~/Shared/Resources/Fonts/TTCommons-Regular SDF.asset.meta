@@ -1,13 +1,8 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Packages/com.venly.sdk/Samples~/Shared/Resources/Fonts/TTCommons-Regular SDF.asset.meta
 guid: 2f4f0302ab36ac0468e53afb9877a4ab
 NativeFormatImporter:
-========
-guid: 035cb3fa943550b46acb25f26210cbb8
-folderAsset: yes
-DefaultImporter:
->>>>>>>> main:Packages/com.venly.sdk/Editor/Resources/Assets.meta
   externalObjects: {}
+  mainObjectFileID: 11400000
   userData: 
   assetBundleName: 
   assetBundleVariant: 
