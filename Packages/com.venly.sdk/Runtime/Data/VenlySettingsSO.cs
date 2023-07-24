@@ -1,7 +1,6 @@
 using System;
 using UnityEngine;
-using VenlySDK.Models;
-using VenlySDK.Models.Shared;
+using Venly.Models.Shared;
 
 [Serializable]
 public class VenlySettingsSO : ScriptableObject
@@ -12,6 +11,13 @@ public class VenlySettingsSO : ScriptableObject
     public class BackendSettings_PlayFab
     {
         public string VenlyAzureFunction;
+    }
+
+    [Serializable]
+    public class BackendSettings_Beamable
+    {
+        public string MicroserviceName;
+        public string EntryFunctionName;
     }
 
     [Serializable]
@@ -30,8 +36,9 @@ public class VenlySettingsSO : ScriptableObject
     public bool HasWalletApiAccess;
     public bool HasMarketApiAccess;
 
-    [HideInInspector] public string SdkPackageRoot;
+    public bool PrintRemoteApiInfo;
 
+    [HideInInspector] public string SdkPackageRoot;
     [HideInInspector] public string PublicResourceRoot;
 #endif
 
@@ -41,11 +48,5 @@ public class VenlySettingsSO : ScriptableObject
     //Backend Settings
     public BackendSettings_PlayFab PlayFabBackendSettings = new();
     public BackendSettings_Custom CustomBackendSettings = new();
-
-
-    public void ConfigureBackendProvider()
-    {
-        Debug.Log("Todo");
-        //VenlySettings.ConfigureForBackend();
-    }
+    public BackendSettings_Beamable BeamableBackendSettings = new();
 }
