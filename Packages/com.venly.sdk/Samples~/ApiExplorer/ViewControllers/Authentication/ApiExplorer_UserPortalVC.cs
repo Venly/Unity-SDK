@@ -63,7 +63,7 @@ public class ApiExplorer_UserPortalVC : SampleViewBase<eApiExplorerViewId>
                         Description = $"Wallet created by Unity API Explorer. (provider={VenlySettings.BackendProvider.GetMemberName()}, id={providerUserId?.ToString()})",
                         Identifier = $"api-explorer-created ({VenlySettings.BackendProvider.GetMemberName()})",
                         Pincode = pincode,
-                        WalletType = eVyWalletType.WhiteLabel
+                        WalletType = eVyWalletType.ApiWallet
                     };
 
                     _wallet = await VenlyAPI.ProviderExtensions.CreateWalletForUser(request).AwaitResult();

@@ -125,7 +125,7 @@ public class ApiExplorer_WalletDetailsVC : SampleViewBase<eApiExplorerViewId>
         SetLabel("lbl-wallet-chain", _wallet.Chain.GetMemberName());
         SetLabel("lbl-wallet-description", _wallet.Description);
         SetLabel("lbl-wallet-identifier", _wallet.Identifier);
-        SetLabel("lbl-wallet-recoverable", _wallet.WalletType == eVyWalletType.WhiteLabel ? "YES" : "NO");
+        SetLabel("lbl-wallet-recoverable", _wallet.WalletType == eVyWalletType.ApiWallet ? "YES" : "NO");
         SetLabel("lbl-wallet-balance", $"{_wallet.Balance.Balance} {_wallet.Balance.Symbol}");
 
         //Token Data

@@ -44,6 +44,14 @@ namespace Venly.Editor.Tools.SDKManager
             _panelSettingsAuth.Bind(VyEditorData.SerializedRuntimeSettings); //hm
 
             _panelSettingsAuth.Q<Button>("btn-save-auth").clickable.clicked += onSaveAuth_Clicked;
+            _panelSettingsAuth.Q<Toggle>("tgl-show-secret").value =
+                !_panelSettingsAuth.Q<TextField>("txt-client-secret").isPasswordField;
+            _panelSettingsAuth.Q<TextField>("txt-client-secret").multiline = true;
+            _panelSettingsAuth.Q<Toggle>("tgl-show-secret").RegisterValueChangedCallback((e) =>
+            {
+                _panelSettingsAuth.Q<TextField>("txt-client-secret").isPasswordField = !e.newValue;
+                _panelSettingsAuth.Q<TextField>("txt-client-secret").multiline = true;
+            });
 
             //Main Settings Elements
             _panelSettingsMain = VenlyEditorUtils.GetUXML_SDKManager("SDKManagerContent_settings").CloneTree().Children().First();

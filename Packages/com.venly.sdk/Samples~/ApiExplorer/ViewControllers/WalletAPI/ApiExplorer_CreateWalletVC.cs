@@ -40,7 +40,7 @@ public class ApiExplorer_CreateWalletVC : SampleViewBase<eApiExplorerViewId>
             Description = GetValue("txt-description"),
             Identifier = GetValue("txt-identifier"),
             Pincode = GetValue("txt-pincode"),
-            WalletType = GetToggleValue("toggle-recoverable") ? eVyWalletType.WhiteLabel : eVyWalletType.UnrecoverableWhiteLabel
+            WalletType = eVyWalletType.ApiWallet
         };
 
         ViewManager.Loader.Show("Creating Wallet..");

@@ -67,8 +67,10 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
 
             //Login with Credentials
             var newAccount = await ctx.Accounts.CreateNewAccount();
-
             var operation = await newAccount.AddEmail(GetValue("txt-email"), GetValue("txt-password"));
+
+            //var operation = await ctx.Accounts.Current.AddEmail(GetValue("txt-email"), GetValue("txt-password"));
+
             if (!operation.isSuccess)
             {
                 switch (operation.error)
