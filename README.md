@@ -1,6 +1,6 @@
 ## Venly SDK for Unity3D
 
-# Version 1.0.8
+# Version 1.0.9
 - Wallet API
 - NFT API
 - Market API
@@ -18,4 +18,4 @@
 - User Login/Create Flow (Beamable/PlayFab)
 
 # Documentation
-Documentation can be found [here](https://docs.venly.io/venly-gaming-toolkit/)
+Documentation can be found [here](https://docs.venly.io/docs/getting-started-with-unity)
