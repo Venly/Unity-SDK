@@ -21,11 +21,11 @@ namespace Venly.Backends.Beamable
     {
         public const string BeamContextDataKey = "Beamable-Context";
         private BeamContext _currContext = null;
-        private object _targetClient = null;
-        private MethodInfo _entryFunction = null;
 
         private bool HasContext => _currContext != null;
-        private bool HasTarget => _targetClient != null || _entryFunction != null;
+
+        private VyBeamMicroserviceInvoker _msInvoker;
+        private bool HasInvoker => _msInvoker != null;
 
         public VyProvider_Beamable() : base(eVyBackendProvider.Beamable.GetMemberName())
         {
@@ -45,12 +45,32 @@ namespace Venly.Backends.Beamable
         {
             if (key.Equals(BeamContextDataKey))
             {
-                LoadServiceParameters(data as BeamContext);
+                if(!LoadInvoker(data as BeamContext, out var errMsg))
+                {
+                    VenlyLog.Exception(errMsg);
+                }
             }
         }
 
-        private void LoadServiceParameters(BeamContext ctx = null)
+        private bool LoadInvoker(BeamContext ctx, out string errMsg)
         {
+            errMsg = string.Empty;
+
+            //Retrieve Invoker
+            if(!HasInvoker)
+            {
+                var clientName = VenlySettings.BeamableBackendSettings.MicroserviceName;
+                var functionName = VenlySettings.BeamableBackendSettings.EntryFunctionName;
+                _msInvoker = VyBeamUtils.FindMicroserviceClient(clientName, functionName, out errMsg);
+
+                if(_msInvoker == null)
+                {
+                    //Invoker not found...
+                    return false;
+                }
+            }
+
+            //Activate Invoker
             if (ctx == null)
             {
                 ctx = BeamContext.Default;
@@ -64,67 +84,17 @@ namespace Venly.Backends.Beamable
                 new Task(waitReady).RunSynchronously();
             }
 
-            if (_currContext == ctx) return;
-
             _currContext = ctx;
-
             if (!_currContext.IsInitialized)
             {
-                VenlyLog.Warning("VyProvider_Beamable::LoadServiceParameters >> BeamContext not yet initialized. (abort)");
+                errMsg = "VyProvider_Beamable::LoadInvoker >> BeamContext not yet initialized. (abort)";
                 _currContext = null;
-                return;
-            }
-
-            try
-            {
-                Assembly ass = Assembly.Load("Unity.Beamable.Customer.MicroserviceClients");
-                var serviceName = $"{VenlySettings.BeamableBackendSettings.MicroserviceName}Client";
-                var clientType = ass.ExportedTypes.FirstOrDefault(t => t.Name.Equals(serviceName));
-                _targetClient = ctx.Microservices().GetType().GetMethod("GetClient").MakeGenericMethod(new[] {clientType}).Invoke(_currContext.Microservices(), null);
-                _entryFunction = _targetClient.GetType().GetMethod(VenlySettings.BeamableBackendSettings.EntryFunctionName);
-            }
-            catch (Exception e)
-            {
-                VenlyLog.Exception(e);
-                VenlyLog.Warning($"VyProvider_Beamable::LoadServiceParameters >> Failed to retrieve Microservice/EntryFunction (\'{VenlySettings.BeamableBackendSettings.EntryFunctionName}\') from Microservice Client (\'{VenlySettings.BeamableBackendSettings.MicroserviceName}Client\')");
-                _currContext = null;
-            }
-
-            string errMsg;
-            if(!VerifyEntryFunctionSignature(_entryFunction, out errMsg))
-            {
-                _targetClient = null;
-                _entryFunction = null;
-
-                VenlyLog.Warning($"VyProvider_Beamable::LoadServiceParameters >> The Entry Function does not match the required function signature (err={errMsg})");
-            }
-        }
-
-        private bool VerifyEntryFunctionSignature(MethodInfo function, out string errMsg)
-        {
-            errMsg = null;
-            if (function.ReturnType != typeof(Promise<string>))
-            {
-                errMsg = "Entry Function should have \'Promise<string>\' or \'Task<string>\' as return type";
                 return false;
             }
 
-            var functionParams = function.GetParameters();
-            if (functionParams.Length == 0)
+            if(!_msInvoker.ActivateInstance(_currContext))
             {
-                errMsg = "Entry Function should accept a parameter of type \'string\'";
-                return false;
-            }
-            
-            if (functionParams.Length > 1)
-            {
-                errMsg = $"Entry Function should only have a single parameter (\'string\'). (current length = \'{functionParams.Length}\')";
-                return false;
-            }
-
-            if (functionParams[0].ParameterType != typeof(string))
-            {
-                errMsg = $"Entry function's parameters should be of type \'string\' (current type = \'{functionParams[0].ParameterType.Name}\')";
+                errMsg = "VyProvider_Beamable::LoadInvoker >> Failed to activate invoker. (abort)";
                 return false;
             }
 
@@ -133,21 +103,17 @@ namespace Venly.Backends.Beamable
 
         public override VyTask<T> MakeRequest<T>(VyRequestData requestData)
         {
-            if (!HasContext)
+            if (!HasInvoker)
             {
-                LoadServiceParameters();
-
-                if(!HasContext)
-                    return VyTask<T>.Failed(new Exception("[Beamable Provider] BeamContext not set."));
-            }
-
-            if (!HasTarget)
-            {
-                return VyTask<T>.Failed(new Exception("[Beamable Provider] Microservice Client and/or Entry Function not found"));
+                if(!LoadInvoker(_currContext, out var errMsg))
+                {
+                    VenlyLog.Exception(errMsg);
+                    return VyTask<T>.Failed(new Exception($"[Beamable Provider] {errMsg}"));
+                }
             }
 
             var taskNotifier = VyTask<T>.Create("beamable_provider_makeRequest");
-            var resultPromise = (Promise<string>)_entryFunction.Invoke(_targetClient, new[] {JsonConvert.SerializeObject(requestData)});
+            var resultPromise = _msInvoker.Invoke(requestData);
 
             //Wait for result
             resultPromise
@@ -184,7 +150,10 @@ namespace Venly.Backends.Beamable
                         taskNotifier.NotifyFail(new VyException(ex));
                     }
                 })
-                .Error(taskNotifier.NotifyFail);
+                .Error(ex =>
+                {
+                    taskNotifier.NotifyFail(ex);
+                });
 
             return taskNotifier.Task;
         }

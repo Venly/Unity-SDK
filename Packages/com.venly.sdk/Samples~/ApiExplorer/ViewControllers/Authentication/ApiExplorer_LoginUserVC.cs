@@ -107,7 +107,7 @@ public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
 
     private void SwitchToPortal(string userId)
     {
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.Auth_UserPortal, ApiExplorer_UserPortalVC.DATAKEY_USER_ID, userId);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.Auth_UserPortal, ApiExplorer_UserPortalVC.DATAKEY_PROVIDER_USER_ID, userId);
         ViewManager.SwitchView(eApiExplorerViewId.Auth_UserPortal);
     }
 }

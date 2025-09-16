@@ -38,7 +38,7 @@ public class ApiExplorer_TransactionDetailsVC : SampleViewBase<eApiExplorerViewI
 
         //Execute
         ViewManager.Loader.Show("Retrieving Transaction Info...");
-        VenlyAPI.Wallet.GetTransactionInfo(_transactionChain, _transactionHash)
+        VenlyAPI.Wallet.GetTransactionStatus(_transactionChain, _transactionHash)
             .OnSuccess(info =>
             {
                 SetLabel("lbl-hash", info.Hash);
@@ -46,7 +46,7 @@ public class ApiExplorer_TransactionDetailsVC : SampleViewBase<eApiExplorerViewI
                 SetLabel("lbl-confirmations", info.Confirmations.ToString());
                 SetLabel("lbl-blockHash", info.BlockHash);
                 SetLabel("lbl-blockNumber", info.BlockNumber.ToString());
-                SetLabel("lbl-reachedFinality", info.HasReachedFinality?"YES":"NO");
+                SetLabel("lbl-reachedFinality", info.HasReachedFinality??false?"YES":"NO");
             })
             .OnFail(ViewManager.HandleException)
             .Finally(ViewManager.Loader.Hide);

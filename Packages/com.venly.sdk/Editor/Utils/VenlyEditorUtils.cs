@@ -152,20 +152,6 @@ namespace Venly.Editor.Utils
         #endregion
 
         #region Helpers
-        internal static eVyChain[] TrimUnsupportedChains(eVyChainFULL[] input)
-        {
-            var supportedChains = (eVyChain[])Enum.GetValues(typeof(eVyChain));
-            var filteredList = new List<eVyChain>();
-
-            foreach (var supported in supportedChains)
-            {
-                if (input.Any(inputChain => inputChain.GetMemberName() == supported.GetMemberName()))
-                    filteredList.Add(supported);
-            }
-
-            return filteredList.ToArray();
-        }
-
         public static Version ParseSemVer(string version)
         {
             version = version.Replace("v", "");

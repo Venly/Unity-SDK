@@ -16,39 +16,30 @@ public class ApiExplorer_ViewManager : SampleViewManager<eApiExplorerViewId>
             case eApiExplorerViewId.Auth_Create: return "Create User";
             case eApiExplorerViewId.Auth_UserPortal: return "User Portal";
 
-            case eApiExplorerViewId.Shared_MultiTokenDetails: return "Multi Token";
-            case eApiExplorerViewId.Shared_CryptoTokenDetails: return "Crypto Token";
+            case eApiExplorerViewId.Shared_Erc1155TokenDetails: return "Erc1155 Token";
+            case eApiExplorerViewId.Shared_Erc20TokenDetails: return "Erc20 Token";
 
             case eApiExplorerViewId.Main_WalletApi: return "Wallet API";
             case eApiExplorerViewId.WalletApi_ViewWallets: return "View Wallets";
             case eApiExplorerViewId.WalletApi_CreateWallet: return "Create Wallet";
             case eApiExplorerViewId.WalletApi_WalletDetails: return "Wallet Details";
-            case eApiExplorerViewId.WalletApi_ViewMultiTokens: return "Multi Tokens";
-            case eApiExplorerViewId.WalletApi_ViewCryptoTokens: return "Crypto Tokens";
+            case eApiExplorerViewId.WalletApi_ViewNfts: return "Erc1155 Tokens";
+            case eApiExplorerViewId.WalletApi_ViewErc20Tokens: return "Erc20 Tokens";
             case eApiExplorerViewId.WalletApi_TransferNativeToken: return "Transfer Native Token";
             case eApiExplorerViewId.WalletApi_ViewWalletEvents: return "Wallet Events";
-            case eApiExplorerViewId.WalletApi_TransferCryptoToken: return "Transfer CryptoToken";
-            case eApiExplorerViewId.WalletApi_TransferMultiToken: return "Transfer MultiToken";
+            case eApiExplorerViewId.WalletApi_TransferErc20Token: return "Transfer Erc20 Token";
+            case eApiExplorerViewId.WalletApi_TransferNft: return "Transfer Erc1155 Token";
             case eApiExplorerViewId.WalletApi_TransactionDetails: return "Transaction Details";
+            case eApiExplorerViewId.WalletApi_CreateUser: return "Create User";
+            case eApiExplorerViewId.WalletApi_ViewUsers: return "View Users";
+            case eApiExplorerViewId.WalletApi_UserDetails: return "User Details";
 
-            case eApiExplorerViewId.Main_NftApi: return "NFT API";
-            case eApiExplorerViewId.NftApi_ViewContracts: return "View Contracts";
-            case eApiExplorerViewId.NftApi_ContractDetails: return "Contract Details";
-            case eApiExplorerViewId.NftApi_ViewTokenTypes: return "View Token Types";
-            case eApiExplorerViewId.NftApi_TokenTypeDetails: return "Token Type Details";
-            case eApiExplorerViewId.NftApi_MintToken: return "Mint Token";
-
-            case eApiExplorerViewId.Main_MarketApi: return "MARKET API";
-            case eApiExplorerViewId.MarketApi_ViewSubUsers: return "View Sub-Users";
-            case eApiExplorerViewId.MarketApi_CreateSubUser: return "Create Sub-User";
-            case eApiExplorerViewId.MarketApi_SubUserDetails: return "Sub-User Details";
-            case eApiExplorerViewId.MarketApi_CreateOffer: return "Create Offer";
-            case eApiExplorerViewId.MarketApi_ViewOffers: return "View Offers";
-            case eApiExplorerViewId.MarketApi_OfferDetails: return "Offer Details";
-            case eApiExplorerViewId.MarketApi_CreateDepositAddress: return "Create Deposit Addr";
-            case eApiExplorerViewId.MarketApi_BuyOffer: return "Buy Offer";
-            case eApiExplorerViewId.MarketApi_PlaceBid: return "Place Bid";
-            case eApiExplorerViewId.MarketApi_ViewFulfillments: return "View Fulfillments";
+            case eApiExplorerViewId.Main_TokenApi: return "Token API";
+            case eApiExplorerViewId.TokenApi_ViewErc1155Contracts: return "View Erc1155 Contracts";
+            case eApiExplorerViewId.TokenApi_Erc1155ContractDetails: return "Erc1155 Contract Details";
+            case eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes: return "View Erc1155 Token Types";
+            case eApiExplorerViewId.TokenApi_Erc1155TokenTypeDetails: return "Erc1155 Token Type Details";
+            case eApiExplorerViewId.TokenApi_MintErc1155Token: return "Mint Erc1155 Token";
 
             default: return "Untitled";
         }
@@ -67,41 +58,32 @@ public enum eApiExplorerViewId : uint
     Auth_Login = 4,
     Auth_Create = 5,
    
-    Shared_MultiTokenDetails = 6,
-    Shared_CryptoTokenDetails = 7,
+    Shared_Erc1155TokenDetails = 6,
+    Shared_Erc20TokenDetails = 7,
 
     Main_WalletApi = 8,
     WalletApi_ViewWallets = 9,
     WalletApi_CreateWallet = 10,
     WalletApi_WalletDetails = 11,
-    WalletApi_ViewMultiTokens = 12,
-    WalletApi_ViewCryptoTokens = 13,
+    WalletApi_ViewNfts = 12,
+    WalletApi_ViewErc20Tokens = 13,
     WalletApi_ViewWalletEvents = 14,
     WalletApi_TransferNativeToken = 15,
-    WalletApi_TransferCryptoToken = 16,
-    WalletApi_TransferMultiToken = 17,
+    WalletApi_TransferErc20Token = 16,
+    WalletApi_TransferNft = 17,
     WalletApi_TransactionDetails = 18,
+    WalletApi_CreateUser = 19,
+    WalletApi_ViewUsers = 20,
+    WalletApi_UserDetails = 21,
 
-    Main_NftApi = 19,
-    NftApi_ViewContracts = 20,
-    NftApi_ContractDetails = 21,
-    NftApi_ViewTokenTypes = 22,
-    NftApi_TokenTypeDetails = 23,
-    NftApi_MintToken = 24,
+    Main_TokenApi = 30,
+    TokenApi_ViewErc1155Contracts = 31,
+    TokenApi_Erc1155ContractDetails = 32,
+    TokenApi_ViewErc1155TokenTypes = 33,
+    TokenApi_Erc1155TokenTypeDetails = 34,
+    TokenApi_MintErc1155Token = 35,
 
-    Main_MarketApi = 25,
-    MarketApi_ViewSubUsers = 26,
-    MarketApi_CreateSubUser = 27,
-    MarketApi_SubUserDetails = 28,
-    MarketApi_CreateOffer = 29,
-    MarketApi_ViewOffers = 30,
-    MarketApi_OfferDetails = 31,
-    MarketApi_PlaceBid = 32,
-    MarketApi_CreateDepositAddress = 33,
-    MarketApi_BuyOffer = 34,
-    MarketApi_ViewFulfillments = 35,
-
-    Auth_UserPortal = 36,
+    Auth_UserPortal = 40,
 
     Count
 }
@@ -109,9 +91,8 @@ public enum eApiExplorerViewId : uint
 public static class ApiExplorer_GlobalKeys
 {
     public const string DATA_AllWalletsCached = "all-wallets-cache";
-    public const string DATA_AllSubUsersCached = "all-subUsers-cache";
-    public const string DATA_AllContractsCached = "all-contracts-cache";
-    public const string DATA_Contract = "contract";
-    public const string DATA_UserWallet = "user-wallet";
-    public const string DATA_UserMarketProfile = "user-market-profile";
+    public const string DATA_CachedUsers = "cached-users";
+    public const string DATA_CachedErc1155Contracts = "cached-erc1155-contracts";
+    public const string DATA_Erc1155Contract = "erc1155-contract";
+    public const string DATA_User = "provider-user";
 }

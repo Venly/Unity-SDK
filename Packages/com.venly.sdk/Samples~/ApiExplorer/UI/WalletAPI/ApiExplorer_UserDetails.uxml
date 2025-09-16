@@ -1,0 +1,17 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Samples/Shared/SampleSharedStyle.uss?fileID=7433441132597879392&amp;guid=87b612c5c3ef33c4cb5833fee346054f&amp;type=3#SampleSharedStyle" />
+    <ui:VisualElement name="root" class="sample-main-background" style="flex-grow: 1;">
+        <SampleControl_Header />
+        <ui:VisualElement style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px;">
+            <ui:VisualElement name="user-details" style="margin-left: 0; margin-right: 0; margin-top: 10px; margin-bottom: 20px; border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0); padding-left: 10px; padding-right: 10px; padding-top: 10px; padding-bottom: 10px; flex-shrink: 0;">
+                <ui:TextField picking-mode="Ignore" label="Id" readonly="true" name="lbl-user-id" multiline="true" class="texfield-readonly" style="margin-left: 0; margin-right: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 1px;" />
+                <ui:TextField picking-mode="Ignore" label="Reference" readonly="true" name="lbl-user-reference" multiline="true" class="texfield-readonly" style="margin-left: 0; margin-right: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 1px;" />
+                <ui:TextField picking-mode="Ignore" label="Created At" readonly="true" name="lbl-user-created" multiline="true" class="texfield-readonly" style="margin-left: 0; margin-right: 0; padding-bottom: 0; margin-top: 2px; margin-bottom: 1px;" />
+            </ui:VisualElement>
+            <VyControl_WalletListView name="lst-wallets" mock-item-count="1" />
+            <ui:VisualElement name="actions" style="margin-top: 10px; align-items: center;">
+                <ui:Button text="Add Wallet" display-tooltip-when-elided="true" name="btn-add-wallet" class="main-button-style" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

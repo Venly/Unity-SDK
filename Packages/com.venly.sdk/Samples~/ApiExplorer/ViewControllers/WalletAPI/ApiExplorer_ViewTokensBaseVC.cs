@@ -48,7 +48,7 @@ public abstract class ApiExplorer_ViewTokensBaseVC<T, TListView, TListItem> : Sa
             _tokenList = resultArr.ToList();
             NoDataRefresh = true;
         } 
-        else if (TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET, ApiExplorer_GlobalKeys.DATA_UserWallet))
+        else if (TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET))
         {
             ShowRefresh = true; //Wallet present, refresh is possible
         }

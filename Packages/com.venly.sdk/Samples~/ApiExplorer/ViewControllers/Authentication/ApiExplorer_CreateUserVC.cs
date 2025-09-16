@@ -118,7 +118,7 @@ public class ApiExplorer_CreateUserVC : SampleViewBase<eApiExplorerViewId>
     private void SwitchToPortal(string userId)
     {
         ViewManager.SetViewBlackboardData(eApiExplorerViewId.Auth_UserPortal, ApiExplorer_UserPortalVC.DATAKEY_PINCODE, GetValue("txt-pincode"));
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.Auth_UserPortal, ApiExplorer_UserPortalVC.DATAKEY_USER_ID, userId);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.Auth_UserPortal, ApiExplorer_UserPortalVC.DATAKEY_PROVIDER_USER_ID, userId);
         ViewManager.SwitchView(eApiExplorerViewId.Auth_UserPortal);
     }
 }
