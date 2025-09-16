@@ -5,8 +5,7 @@
         <ui:VisualElement name="tools" style="justify-content: center; flex-grow: 1;">
             <ui:VisualElement name="api-tools" style="align-items: center; margin-top: 20px;">
                 <ui:Button text="Wallet API" display-tooltip-when-elided="true" name="btn-wallet-api" class="main-button-style" />
-                <ui:Button text="NFT API" display-tooltip-when-elided="true" name="btn-nft-api" class="main-button-style" />
-                <ui:Button text="Market API" display-tooltip-when-elided="true" name="btn-market-api" class="main-button-style" style="font-size: 20px; visibility: visible;" />
+                <ui:Button text="Token API" display-tooltip-when-elided="true" name="btn-token-api" class="main-button-style" />
             </ui:VisualElement>
             <ui:VisualElement name="user-tools" style="align-items: center; margin-top: 20px;" />
         </ui:VisualElement>

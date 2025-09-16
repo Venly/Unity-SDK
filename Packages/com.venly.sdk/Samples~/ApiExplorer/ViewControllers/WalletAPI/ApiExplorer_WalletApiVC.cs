@@ -9,11 +9,13 @@ public class ApiExplorer_WalletApiVC : SampleViewBase<eApiExplorerViewId>
     {
         ShowRefresh = false;
 
+        BindButton_SwitchView("btn-view-users", eApiExplorerViewId.WalletApi_ViewUsers);
+        BindButton_SwitchView("btn-create-user", eApiExplorerViewId.WalletApi_CreateUser);
         BindButton_SwitchView("btn-view-wallets", eApiExplorerViewId.WalletApi_ViewWallets);
         BindButton_SwitchView("btn-create-wallet", eApiExplorerViewId.WalletApi_CreateWallet);
-        BindButton_SwitchView("btn-transfer-nativetoken", eApiExplorerViewId.WalletApi_TransferNativeToken);
-        BindButton_SwitchView("btn-transfer-multitoken", eApiExplorerViewId.WalletApi_TransferMultiToken);
-        BindButton_SwitchView("btn-transfer-cryptotoken", eApiExplorerViewId.WalletApi_TransferCryptoToken);
+        //BindButton_SwitchView("btn-transfer-nativetoken", eApiExplorerViewId.WalletApi_TransferNativeToken);
+        //BindButton_SwitchView("btn-transfer-multitoken", eApiExplorerViewId.WalletApi_TransferNft);
+        //BindButton_SwitchView("btn-transfer-cryptotoken", eApiExplorerViewId.WalletApi_TransferErc20Token);
 
 #if ENABLE_VENLY_DEV_MODE
         if (!VenlySettings.HasWalletApiAccess)

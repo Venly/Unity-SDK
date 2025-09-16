@@ -1,8 +1,8 @@
 {
   "name": "com.venly.sdk",
-  "version": "1.0.10",
+  "version": "3.0.1",
   "displayName": "Venly SDK",
-  "description": "The Venly SDK provides an easy way to communicate with Venly's various API products (Wallet/NFT/Market). The SDK is backend agnostic meaning that you can either use one of the build-in backend extensions (such as PlayFab/Beamable) or build an extension for your own backend solution.",
+  "description": "The Venly SDK provides an easy way to communicate with Venly's various API products (Wallet/Token/Pay). The SDK is backend agnostic meaning that you can either use one of the build-in backend extensions (such as PlayFab/Beamable) or build an extension for your own backend solution.",
   "unity": "2021.3",
   "documentationUrl": "https://venly.io/",
   "changelogUrl": "https://venly.io/",
@@ -10,6 +10,8 @@
   "keywords": [
     "Venly",
     "NFT",
+    "Erc1155",
+    "Erc20",
     "web3",
     "SDK",
     "Blockchain"

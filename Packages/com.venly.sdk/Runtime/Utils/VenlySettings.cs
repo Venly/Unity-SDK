@@ -25,9 +25,9 @@ public class VenlySettings
     public static bool PrintRemoteApiInfo => Settings.PrintRemoteApiInfo;
     public static string PublicResourceRoot => Settings.PublicResourceRoot;
 
-    public static bool HasNftApiAccess => Settings.HasNftApiAccess;
+    public static bool HasTokenApiAccess => Settings.HasTokenApiAccess;
     public static bool HasWalletApiAccess => Settings.HasWalletApiAccess;
-    public static bool HasMarketApiAccess => Settings.HasMarketApiAccess;
+    public static bool HasPayApiAccess => Settings.HasPayApiAccess;
 
 
     public static void SetCredentials(string clientId, string clientSecret)
@@ -39,9 +39,9 @@ public class VenlySettings
 
     public static void SetAccessAndEnvironment(VyJwtInfo jwtInfo)
     {
-        Settings.HasWalletApiAccess = jwtInfo.HasWalletAccess;
-        Settings.HasNftApiAccess = jwtInfo.HasNftAccess;
-        Settings.HasMarketApiAccess = jwtInfo.HasMarketAccess;
+        Settings.HasWalletApiAccess = jwtInfo.IsAuthorized(eVyApiEndpoint.Wallet);
+        Settings.HasTokenApiAccess = jwtInfo.IsAuthorized(eVyApiEndpoint.Token);
+        Settings.HasPayApiAccess = jwtInfo.IsAuthorized(eVyApiEndpoint.Pay);
         Settings.Environment = jwtInfo.Environment;
     }
 

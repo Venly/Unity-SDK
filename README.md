@@ -1,9 +1,9 @@
 ## Venly SDK for Unity3D
 
-# Version 1.0.10
+# Version 3.0.0
 - Wallet API
-- NFT API
-- Market API
+- Token API
+- Pay API
 
 # Backend Provider Support
 - DevMode (Editor Only)
@@ -13,8 +13,7 @@
 
 # API Explorer (Sample)
 - Wallet API samples
-- NFT Api Samples
-- Market API Samples
+- Token API samples
 - User Login/Create Flow (Beamable/PlayFab)
 
 # Sample Project (VenlyDash)

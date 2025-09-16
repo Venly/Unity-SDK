@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine.UIElements;
 using Venly;
-using Venly.Models.Market;
 using Venly.Models.Shared;
 using Venly.Models.Wallet;
 using Venly.Utils;
@@ -10,15 +9,15 @@ using Venly.Utils;
 public class ApiExplorer_UserPortalVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_USER_ID = "user-id";
+    public const string DATAKEY_PROVIDER_USER_ID = "user-id";
     public const string DATAKEY_PINCODE = "pincode";
 
     //DATA
     private bool _hasWallet = false;
     private VyWalletDto _wallet;
 
-    private bool _hasMarketUser = false;
-    private VyUserProfileDto _marketUser;
+    private bool _hasUser = false;
+    private VyUserDto _user;
 
     public ApiExplorer_UserPortalVC() :
         base(eApiExplorerViewId.Auth_UserPortal)
@@ -29,7 +28,7 @@ public class ApiExplorer_UserPortalVC : SampleViewBase<eApiExplorerViewId>
         base.OnBindElements(root);
 
         BindButton("btn-wallet", OnClick_Wallet);
-        BindButton("btn-market", OnClick_Market);
+        //BindButton("btn-market", OnClick_Market);
     }
 
     protected override void OnActivate()
@@ -41,47 +40,64 @@ public class ApiExplorer_UserPortalVC : SampleViewBase<eApiExplorerViewId>
     {
         try
         {
+            //Check if User exists
+            ViewManager.Loader.Show("Checking for User...");
+            _hasUser = await VenlyAPI.ProviderExtensions.HasUser().AwaitResult();
+
+            if (_hasUser)
+            {
+                ViewManager.Loader.Show("Retrieving User...");
+                _user = await VenlyAPI.ProviderExtensions.GetUser().AwaitResult();
+            }
+            else
+            {
+                ViewManager.Loader.Show("Creating User...");
+                if (TryGetBlackboardData(out string pincode, localKey: DATAKEY_PINCODE))
+                {
+                    TryGetBlackboardDataRaw(out object providerUserId, localKey: DATAKEY_PROVIDER_USER_ID);
+
+                    //Create User Params
+                    var request = new VyCreateUserRequest
+                    {
+                        Reference =
+                            $"User created by Unity API Explorer. (provider={VenlySettings.BackendProvider.GetMemberName()}, id={providerUserId?.ToString()})",
+                        SigningMethod = new VyCreatePinSigningMethodRequest
+                        {
+                            Value = pincode
+                        }
+                    };
+
+                    _user = await VenlyAPI.ProviderExtensions.CreateUser(request).AwaitResult();
+                    _hasUser = true;
+                }
+            }
+
+            ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_User, _user);
+
             //Check if Wallet is present
             ViewManager.Loader.Show("Checking for Wallet...");
             _hasWallet = await VenlyAPI.ProviderExtensions.HasWallet().AwaitResult();
             if (_hasWallet)
             {
                 ViewManager.Loader.Show("Retrieving Wallet...");
-                _wallet = await VenlyAPI.ProviderExtensions.GetWalletForUser().AwaitResult();
+                _wallet = await VenlyAPI.ProviderExtensions.GetWallet().AwaitResult();
             }
             else
             {
                 ViewManager.Loader.Show("Creating Wallet...");
-                if (TryGetBlackboardData(out string pincode, localKey: DATAKEY_PINCODE))
+                TryGetBlackboardDataRaw(out object providerUserId, localKey: DATAKEY_PROVIDER_USER_ID);
+
+                //Create Wallet Params
+                var request = new VyCreateWalletRequest
                 {
-                    TryGetBlackboardDataRaw(out object providerUserId, localKey: DATAKEY_USER_ID);
+                    Chain = eVyChain.Matic,
+                    Description = $"Wallet created by Unity API Explorer. (provider={VenlySettings.BackendProvider.GetMemberName()}, id={providerUserId?.ToString()})",
+                    Identifier = $"api-explorer-created ({VenlySettings.BackendProvider.GetMemberName()})",
+                    UserId = _user.Id
+                };
 
-                    //Create Wallet Params
-                    var request = new VyCreateWalletRequest
-                    {
-                        Chain = eVyChain.Matic,
-                        Description = $"Wallet created by Unity API Explorer. (provider={VenlySettings.BackendProvider.GetMemberName()}, id={providerUserId?.ToString()})",
-                        Identifier = $"api-explorer-created ({VenlySettings.BackendProvider.GetMemberName()})",
-                        Pincode = pincode,
-                        WalletType = eVyWalletType.ApiWallet
-                    };
-
-                    _wallet = await VenlyAPI.ProviderExtensions.CreateWalletForUser(request).AwaitResult();
-                    _hasWallet = true;
-                }
-                else ViewManager.Loader.Show($"[UserPortalVC] DATAKEY \'{DATAKEY_PINCODE}\' is not set.");
-            }
-
-            ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_UserWallet, _wallet);
-            ViewManager.Loader.Show("Checking for Market User...");
-
-            //Check if MarketUser is present
-            _hasMarketUser = await VenlyAPI.ProviderExtensions.HasMarketUser().AwaitResult();
-            if (_hasMarketUser)
-            {
-                ViewManager.Loader.Show("Retrieving Market User...");
-                _marketUser = await VenlyAPI.ProviderExtensions.GetMarketUserForUser().AwaitResult();
-                ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_UserMarketProfile, _marketUser);
+                _wallet = await VenlyAPI.ProviderExtensions.CreateWallet(request).AwaitResult();
+                _hasWallet = true;
             }
         }
         catch (Exception ex)
@@ -99,47 +115,47 @@ public class ApiExplorer_UserPortalVC : SampleViewBase<eApiExplorerViewId>
         base.OnRefreshUI();
 
         SetLabel("btn-wallet", _hasWallet?"Show Wallet":"Create Wallet");
-        SetLabel("btn-market", _hasMarketUser?"Show Market User":"Create Market User");
+        SetLabel("btn-market", _hasUser?"Show User":"Create User");
     }
 
     private void OnClick_Wallet()
     {
         if (_hasWallet)
         {
-            ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_UserWallet, _wallet);
+            ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.DATAKEY_WALLET, _wallet);
             ViewManager.SwitchView(eApiExplorerViewId.WalletApi_WalletDetails, this, false);
         }
     }
 
-    private async void OnClick_Market()
-    {
-        try
-        {
-            if (!_hasMarketUser)
-            {
-                ViewManager.Loader.Show("Creating Market User...");
-                TryGetBlackboardDataRaw(out object providerUserId, localKey: DATAKEY_USER_ID);
-                if (providerUserId == null) providerUserId = "generic";
+    //private async void OnClick_Market()
+    //{
+    //    try
+    //    {
+    //        if (!_hasMarketUser)
+    //        {
+    //            ViewManager.Loader.Show("Creating Market User...");
+    //            TryGetBlackboardDataRaw(out object providerUserId, localKey: DATAKEY_USER_ID);
+    //            if (providerUserId == null) providerUserId = "generic";
 
-                var request = new VyCreateSubUserRequest
-                {
-                    Nickname = $"{VenlySettings.BackendProvider.GetMemberName()}_{providerUserId}",
-                    Type = eVyUserType.SubUser
-                };
+    //            var request = new VyCreateSubUserRequest
+    //            {
+    //                Nickname = $"{VenlySettings.BackendProvider.GetMemberName()}_{providerUserId}",
+    //                Type = eVyUserType.SubUser
+    //            };
 
-                _marketUser = await VenlyAPI.ProviderExtensions.CreateMarketUserForUser(request).AwaitResult();
-                _hasMarketUser = true;
-                ViewManager.Loader.Hide();
-            }
-        }
-        catch (Exception ex)
-        {
-            ViewManager.Loader.Hide();
-            ViewManager.HandleException(ex);
-            return;
-        }
+    //            _marketUser = await VenlyAPI.ProviderExtensions.CreateMarketUserForUser(request).AwaitResult();
+    //            _hasMarketUser = true;
+    //            ViewManager.Loader.Hide();
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        ViewManager.Loader.Hide();
+    //        ViewManager.HandleException(ex);
+    //        return;
+    //    }
 
-        ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_UserMarketProfile, _marketUser);
-        ViewManager.SwitchView(eApiExplorerViewId.MarketApi_SubUserDetails, this, false);
-    }
+    //    ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_UserMarketProfile, _marketUser);
+    //    ViewManager.SwitchView(eApiExplorerViewId.MarketApi_SubUserDetails, this, false);
+    //}
 }

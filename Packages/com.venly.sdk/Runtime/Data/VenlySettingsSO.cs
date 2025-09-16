@@ -32,9 +32,9 @@ public class VenlySettingsSO : ScriptableObject
     public string ClientId;
     public string ClientSecret;
 
-    public bool HasNftApiAccess;
+    public bool HasTokenApiAccess;
     public bool HasWalletApiAccess;
-    public bool HasMarketApiAccess;
+    public bool HasPayApiAccess;
 
     public bool PrintRemoteApiInfo;
 

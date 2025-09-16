@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using UnityEngine.UIElements;
 using Venly;
@@ -11,6 +12,7 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
 
     //DATA
     private VyWalletDto _sourceWallet;
+    private VyUserDto _sourceUser;
 
     public ApiExplorer_TransferNativeTokenVC() : 
         base(eApiExplorerViewId.WalletApi_TransferNativeToken) { }
@@ -31,7 +33,7 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
         ShowNavigateHome = false;
 
         //Check if Source Is Set
-        TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET, ApiExplorer_GlobalKeys.DATA_UserWallet);
+        TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET);
         ToggleElement("btn-select-source", _sourceWallet == null);
         UpdateSourceWallet(_sourceWallet);
     }
@@ -42,7 +44,29 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
 
         SetLabel("lbl-source-wallet", _sourceWallet == null?"select wallet":_sourceWallet.Id);
         SetLabel("lbl-token", _sourceWallet == null?"select wallet":_sourceWallet.Balance.Symbol);
-        SetLabel("lbl-balance", _sourceWallet == null?"select wallet":_sourceWallet.Balance.Balance.ToString(CultureInfo.InvariantCulture));
+        SetLabel("lbl-balance", _sourceWallet == null?"select wallet":_sourceWallet.Balance.Balance?.ToString(CultureInfo.InvariantCulture));
+
+        //Retrieve UserAuth
+        if (_sourceWallet != null)
+        {
+            _sourceUser = null;
+            if (string.IsNullOrEmpty(_sourceWallet.UserId))
+            {
+                ViewManager.HandleException(new Exception("Wallet has no associated user..."));
+                ToggleElement("btn-transfer", false);
+                return;
+            }
+
+            VenlyAPI.Wallet.GetUser(_sourceWallet.UserId)
+                .OnSuccess(user =>
+                {
+                    ViewManager.Loader.Show("Retrieving Associated User...");
+                    _sourceUser = user;
+                    ToggleElement("btn-transfer", true);
+                })
+                .OnFail(ex => ViewManager.HandleException(ex))
+                .Finally(() => ViewManager.Loader.Hide());
+        }
     }
 
     protected override void OnDeactivate()
@@ -85,22 +109,29 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
     private void OnClick_Transfer()
     {
         if (!ValidateData(_sourceWallet, "sourceWallet")) return;
+        if (!ValidateData(_sourceUser, "sourceUser")) return;
         if (!ValidateInput("txt-pincode")) return;
         if (!ValidateInput("txt-target-address")) return;
-        if (!ValidateInput<double>("txt-amount")) return;
+        if (!ValidateInput<float>("txt-amount")) return;
 
-        var reqParams = new VyTransactionNativeTokenTransferRequest()
+        var reqParams = new VyCreateTransferTransactionRequest()
         {
-            Chain = _sourceWallet?.Chain ?? eVyChain.NotSupported,
+            Chain = _sourceWallet.Chain,
             WalletId = _sourceWallet?.Id,
-            ToAddress = GetValue("txt-target-address"),
-            Value = GetValue<double>("txt-amount"),
+            To = GetValue("txt-target-address"),
+            Value = GetValue<float>("txt-amount"),
             Data = "Venly Api Explorer Transaction (Native Token)"
 
         };
 
+        if (!_sourceUser.TryGetPinAuth(GetValue("txt-pincode"), out var userAuth))
+        {
+            ViewManager.HandleException(new Exception("Failed to retrieve UserAuth"));
+            return;
+        }
+
         ViewManager.Loader.Show("Transferring...");
-        VenlyAPI.Wallet.ExecuteNativeTokenTransfer(GetValue("txt-pincode"), reqParams)
+        VenlyAPI.Wallet.CreateTransaction_Transfer(reqParams, userAuth)
             .OnSuccess(transferInfo =>
             {
                 ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXHASH, transferInfo.TransactionHash);

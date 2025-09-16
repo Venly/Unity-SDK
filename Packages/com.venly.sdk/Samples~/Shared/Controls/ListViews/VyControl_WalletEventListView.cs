@@ -21,7 +21,7 @@ public class VyControl_WalletEventListItem : VyControl_ListViewItemBase<VyWallet
 
     public override void BindItem(VyWalletEventDto sourceItem)
     {
-        SetLabel("lbl-event-type", sourceItem.EventType.GetMemberName());
+        SetLabel("lbl-event-type", sourceItem.Type.GetMemberName());
     }
 
     public override void BindMockItem()

@@ -88,8 +88,8 @@ namespace Venly.Editor.Tools.SDKManager
 
                 var realms = new List<string>();
                 if(VenlySettings.HasWalletApiAccess)realms.Add("WALLET");
-                if(VenlySettings.HasNftApiAccess)realms.Add("NFT");
-                if(VenlySettings.HasMarketApiAccess)realms.Add("MARKET");
+                if(VenlySettings.HasTokenApiAccess)realms.Add("TOKEN");
+                if(VenlySettings.HasPayApiAccess)realms.Add("PAY");
                 _lblRealmAccess.value = string.Join(" | ", realms);
 
                 ValidateApplyVisibility();

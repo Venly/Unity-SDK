@@ -1,0 +1,203 @@
+using System;
+using System.Globalization;
+using UnityEngine.Rendering;
+using UnityEngine.UIElements;
+using Venly;
+using Venly.Models.Shared;
+using Venly.Models.Wallet;
+
+public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewId>
+{
+    //DATA-KEYS
+    public const string DATAKEY_WALLET = "wallet";
+    public const string DATAKEY_TOKEN = "token";
+
+    //DATA
+    private VyWalletDto _sourceWallet;
+    private VyUserDto _sourceUser;
+    private VyErc20TokenDto _sourceToken;
+
+    public ApiExplorer_TransferErc20TokenVC() : 
+        base(eApiExplorerViewId.WalletApi_TransferErc20Token) { }
+
+    #region DATA & UI
+    protected override void OnBindElements(VisualElement root)
+    {
+        BindButton("btn-select-source-wallet", OnClick_SelectSourceWallet);
+        BindButton("btn-select-source-token", OnClick_SelectSourceToken);
+        BindButton("btn-select-target", OnClick_SelectTarget);
+        BindButton("btn-transfer", OnClick_Transfer);
+    }
+
+    protected override void OnActivate()
+    {
+        ShowRefresh = false;
+        ShowNavigateHome = false;
+
+        _sourceWallet = null;
+        _sourceToken = null;
+
+        //Check if Source Is Set
+        TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET);
+        ToggleElement("btn-select-source-wallet", _sourceWallet == null);
+        UpdateSourceWallet(_sourceWallet);
+
+        //Check if Token is Set
+        if (_sourceWallet != null)
+        {
+            TryGetBlackboardData(out _sourceToken, localKey: DATAKEY_TOKEN);
+            ToggleElement("btn-select-source-token", _sourceToken == null);
+            UpdateSourceToken(_sourceToken);
+        }
+    }
+
+    private void UpdateSourceWallet(VyWalletDto sourceWallet)
+    {
+        if (_sourceWallet != sourceWallet) //new wallet, reset token
+        {
+            _sourceToken = null;
+        }
+
+        _sourceWallet = sourceWallet;
+
+        if (_sourceWallet == null)
+        {
+            SetLabel("lbl-source-wallet", "select wallet");
+            SetLabel("lbl-source-token", "select wallet");
+            SetLabel("lbl-balance", "select wallet");
+        }
+        else
+        {
+            SetLabel("lbl-source-wallet", _sourceWallet.Id);
+            UpdateSourceToken(_sourceToken);
+        }
+
+        //Hide Select Token button if no wallet is selected yet
+        ToggleElement("btn-select-source-token", _sourceWallet != null);
+
+
+        //Retrieve UserAuth
+        if (_sourceWallet != null)
+        {
+            _sourceUser = null;
+            if (string.IsNullOrEmpty(_sourceWallet.UserId))
+            {
+                ViewManager.HandleException(new Exception("Wallet has no associated user..."));
+                ToggleElement("btn-transfer", false);
+                return;
+            }
+
+            VenlyAPI.Wallet.GetUser(_sourceWallet.UserId)
+                .OnSuccess(user =>
+                {
+                    ViewManager.Loader.Show("Retrieving Associated User...");
+                    _sourceUser = user;
+                    ToggleElement("btn-transfer", true);
+                })
+                .OnFail(ex => ViewManager.HandleException(ex))
+                .Finally(() => ViewManager.Loader.Hide());
+        }
+    }
+
+    private void UpdateSourceToken(VyErc20TokenDto sourceToken)
+    {
+        _sourceToken = sourceToken;
+
+        if (_sourceToken == null)
+        {
+            SetLabel("lbl-source-token", "select token");
+            SetLabel("lbl-balance", "select token");
+        }
+        else
+        {
+            SetLabel("lbl-source-token", _sourceToken.Symbol);
+            SetLabel("lbl-balance", _sourceToken.Balance?.ToString(CultureInfo.InvariantCulture)??"NULL");
+        }
+    }
+
+    protected override void OnDeactivate()
+    {
+        ClearBlackboardData();
+    }
+    #endregion
+
+    #region EVENTS
+    private void OnClick_SelectSourceToken()
+    {
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_ViewErc20Tokens, "sourceWallet", _sourceWallet);
+        ViewManager.SelectionMode(eApiExplorerViewId.WalletApi_ViewErc20Tokens, "Select Token")
+            .OnComplete(result =>
+            {
+                if (result.Success)
+                {
+                    var token = result.Data as VyErc20TokenDto;
+                    UpdateSourceToken(token);
+                }
+            });
+    }
+
+    private void OnClick_SelectSourceWallet()
+    {
+        ViewManager.SelectionMode(eApiExplorerViewId.WalletApi_ViewWallets, "Select Wallet")
+            .OnComplete(result =>
+            {
+                if (result.Success)
+                {
+                    var wallet = result.Data as VyWalletDto;
+                    UpdateSourceWallet(wallet);
+                }
+            });
+    }
+
+    private void OnClick_SelectTarget()
+    {
+        ViewManager.SelectionMode(eApiExplorerViewId.WalletApi_ViewWallets, "Select Wallet")
+            .OnComplete(result =>
+            {
+                if (result.Success)
+                {
+                    var wallet = result.Data as VyWalletDto;
+                    SetLabel("txt-target-address", wallet.Address);
+                }
+            });
+    }
+
+
+    private void OnClick_Transfer()
+    {
+        //Validate
+        if (!ValidateData(_sourceWallet, "sourceWallet")) return;
+        if (!ValidateData(_sourceUser, "sourceUser")) return;
+        if (!ValidateData(_sourceToken, "sourceToken")) return;
+        if (!ValidateInput("txt-target-address")) return;
+        if (!ValidateInput<float>("txt-amount")) return;
+
+        //Execute
+        var reqParams = new VyCreateTokenTransferTransactionRequest()
+        {
+            Chain = _sourceWallet.Chain,
+            WalletId = _sourceWallet.Id,
+            TokenAddress = _sourceToken.TokenAddress,
+            To = GetValue("txt-target-address"),
+            Value = GetValue<float>("txt-amount")
+        };
+
+        if (!_sourceUser.TryGetPinAuth(GetValue("txt-pincode"), out var userAuth))
+        {
+            ViewManager.HandleException(new Exception("Failed to retrieve UserAuth"));
+            return;
+        }
+
+        ViewManager.Loader.Show("Transferring...");
+        VenlyAPI.Wallet.CreateTransaction_TokenTransfer(reqParams, userAuth)
+            .OnSuccess(transferInfo =>
+            {
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXHASH, transferInfo.TransactionHash);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXCHAIN, _sourceWallet.Chain);
+                ViewManager.SwitchView(eApiExplorerViewId.WalletApi_TransactionDetails, CurrentBackTarget);
+            })
+            .OnFail(ViewManager.HandleException)
+            .Finally(ViewManager.Loader.Hide);
+    }
+    #endregion
+}

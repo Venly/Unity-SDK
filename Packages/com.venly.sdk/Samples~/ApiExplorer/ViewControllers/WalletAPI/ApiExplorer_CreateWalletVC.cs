@@ -1,12 +1,19 @@
 using System;
 using UnityEngine.UIElements;
 using Venly;
+using Venly.Core;
 using Venly.Models.Shared;
 using Venly.Models.Wallet;
+using static Venly.VenlyAPI;
 
 public class ApiExplorer_CreateWalletVC : SampleViewBase<eApiExplorerViewId>
 {
     [UIBind("selector-chain")] private DropdownField _selectorChains;
+
+    public const string DATAKEY_USER = "user";
+
+    private VyUserDto _user;
+    private bool _hasExistingUser => _user != null;
 
     public ApiExplorer_CreateWalletVC() : 
         base(eApiExplorerViewId.WalletApi_CreateWallet) { }
@@ -25,33 +32,72 @@ public class ApiExplorer_CreateWalletVC : SampleViewBase<eApiExplorerViewId>
 
         //Populate Selector
         _selectorChains.FromEnum(eVyChain.Matic);
-        _selectorChains.choices.Remove(Enum.GetName(typeof(eVyChain), eVyChain.NotSupported));
+
+        //Get User
+        TryGetBlackboardData(out _user, DATAKEY_USER);
     }
+
     #endregion
 
     #region EVENTS
-    private void OnClick_CreateWallet()
+    private async void OnClick_CreateWallet()
     {
-        if (!ValidateInput("txt-pincode")) return;
+        if (!ValidateInput("txt-pincode", "pincode")) return;
 
+        //Create User if non-existing
+        if (!_hasExistingUser)
+        {
+            var createUser = new VyCreateUserRequest
+            {
+                Reference = "auto-created by API Explorer",
+                SigningMethod = new VyCreatePinSigningMethodRequest
+                {
+                    Value = GetValue("txt-pincode")
+                }
+            };
+
+            ViewManager.Loader.Show("Creating User..");
+            var userResult = await VenlyAPI.Wallet.CreateUser(createUser);
+            ViewManager.Loader.Hide();
+
+            if (!userResult.Success)
+            {
+                ViewManager.HandleException(userResult.Exception);
+                return;
+            }
+
+            _user = userResult.Data;
+        }
+
+        //Get UserAuth
+        if (!ValidateData(_user, "user")) return;
+        if (!_user.TryGetPinAuth(GetValue("txt-pincode"), out var userAuth))
+        {
+            ViewManager.HandleException(new ArgumentException("Failed to retrieve a valid UserAuth..."));
+            return;
+        }
+
+        //Create Wallet
         var createParams = new VyCreateWalletRequest()
         {
             Chain = _selectorChains.GetValue<eVyChain>(),
             Description = GetValue("txt-description"),
             Identifier = GetValue("txt-identifier"),
-            Pincode = GetValue("txt-pincode"),
-            WalletType = eVyWalletType.ApiWallet
+            UserId = _user.Id
         };
 
         ViewManager.Loader.Show("Creating Wallet..");
-        VenlyAPI.Wallet.CreateWallet(createParams)
-            .OnSuccess(wallet =>
-            {
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.DATAKEY_WALLET, wallet);
-                ViewManager.SwitchView(eApiExplorerViewId.WalletApi_WalletDetails, CurrentBackTarget);
-            })
-            .OnFail(ViewManager.Exception.Show)
-            .Finally(ViewManager.Loader.Hide);
+        var walletResult = await VenlyAPI.Wallet.CreateWallet(createParams, userAuth);
+        ViewManager.Loader.Hide();
+
+        if (!walletResult.Success)
+        {
+            ViewManager.HandleException(walletResult.Exception);
+            return;
+        }
+
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.DATAKEY_WALLET, walletResult.Data);
+        ViewManager.SwitchView(eApiExplorerViewId.WalletApi_WalletDetails, CurrentBackTarget);
     }
     #endregion
 }
