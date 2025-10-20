@@ -6,7 +6,7 @@ using Venly.Models.Wallet;
 public class ApiExplorer_ViewWalletEventsVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_EVENTS = "eventList";
+    public static readonly BlackboardKey<VyWalletEventDto[]> KEY_Events = new BlackboardKey<VyWalletEventDto[]>("eventList");
 
     //DATA
     private List<VyWalletEventDto> _events = null;
@@ -23,7 +23,7 @@ public class ApiExplorer_ViewWalletEventsVC : SampleViewBase<eApiExplorerViewId>
         ShowRefresh = false;
         _eventListView.selectionType = SelectionType.None;
 
-        if (TryGetBlackboardData(out VyWalletEventDto[] resultArr, localKey: DATAKEY_EVENTS))
+        if (TryGet(KEY_Events, out VyWalletEventDto[] resultArr))
         {
             _events = resultArr.ToList();
         }

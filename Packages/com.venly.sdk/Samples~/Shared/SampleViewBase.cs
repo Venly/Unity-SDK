@@ -6,7 +6,28 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UIElements;
 using Venly.Core;
-using Venly.Utils;
+
+[System.Diagnostics.DebuggerDisplay("{Name}<{typeof(TValue).Name}>")]
+public readonly struct BlackboardKey<TValue>
+{
+    public string Name { get; }
+    public BlackboardKey(string name)
+    {
+        Name = name;
+    }
+}
+
+[System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+public sealed class SampleViewMetaAttribute : System.Attribute
+{
+    public readonly System.Enum ViewId;
+    public readonly string Title;
+    public SampleViewMetaAttribute(object viewId, string title)
+    {
+        ViewId = (System.Enum)viewId;
+        Title = title;
+    }
+}
 
 [RequireComponent(typeof(UIDocument))]
 public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
@@ -31,6 +52,8 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
 
     private SampleControl_Header _viewHeader;
     private VyTaskNotifier<object> _selectionNotifier;
+    private bool _uiElementsBound = false;
+    private int _refreshSequence = 0;
 
     protected SampleViewBase(T viewId)
     {
@@ -60,57 +83,56 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         return element;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (TryGet/Set with BlackboardKey<T>), not string keys", true)]
     public bool TryGetBlackboardDataRaw(out object result, string localKey = null, string globalKey = null)
     {
         result = null;
-
-        if (!string.IsNullOrEmpty(globalKey))
-        {
-            if (ViewManager.HasGlobalBlackboardData(globalKey))
-            {
-                result = ViewManager.GetGlobalBlackboardDataRaw(globalKey);
-                return true;
-            }
-        }
-
-        if (!string.IsNullOrEmpty(localKey))
-        {
-            if (HasBlackboardData(localKey))
-            {
-                result = GetBlackboardDataRaw(localKey);
-                return true;
-            }
-        }
-
         return false;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (TryGet<T>), not string keys", true)]
     public bool TryGetBlackboardData<T0>(out T0 result, string localKey = null, string globalKey = null) where T0 : class
     {
-        if (TryGetBlackboardDataRaw(out object obj, localKey, globalKey))
-        {
-            result = (T0) obj;
-            return true;
-        }
-
         result = null;
         return false;
     }
 
+    // Typed blackboard helpers
+    public void Set<TVal>(BlackboardKey<TVal> key, TVal value)
+    {
+        _blackboard[key.Name] = value;
+    }
+
+    public bool TryGetRaw<TVal>(BlackboardKey<TVal> key, out object rawValue)
+    {
+        return _blackboard.TryGetValue(key.Name, out rawValue);
+    }
+
+    public bool TryGet<TVal>(BlackboardKey<TVal> key, out TVal value)
+    {
+        if (TryGetRaw(key, out var obj) && obj is TVal cast)
+        {
+            value = cast;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
+    [Obsolete("Use typed BlackboardKey APIs (Has via TryGet), not string keys", true)]
     public bool HasBlackboardData(string key)
     {
-        return _blackboard.ContainsKey(key);
+        return false;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (Set<T>), not string keys", true)]
     public void SetBlackboardData(string key, object value)
     {
-        _blackboard[key] = value;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (Clear all or typed), not string keys", true)]
     public void ClearBlackboardData(string key)
     {
-        if (_blackboard.ContainsKey(key))
-            _blackboard.Remove(key);
     }
 
     public void ClearBlackboardData()
@@ -124,20 +146,15 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         _blackboard = newBlackboard;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (TryGet<T>), not string keys", true)]
     public object GetBlackboardDataRaw(string key)
     {
-        return _blackboard[key];
+        return null;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (TryGet<T>), not string keys", true)]
     public T0 GetBlackBoardData<T0>(string key) where T0 : class
     {
-        var obj = GetBlackboardDataRaw(key);
-        if (obj is T0 val)
-        {
-            return val;
-        }
-        
-        VenlyLog.Exception($"[GetBlackBoardData] Stored object \'{key}\' is not of type \'{typeof(T0).Name}\' (type=\'{obj.GetType().Name}\')");
         return null;
     }
 
@@ -157,14 +174,35 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         button.clickable.clicked += targetFunction;
     }
 
-    protected void SetLabel(string elementName, string txt)
+    protected void BindToggle(string elementName, Action<bool> targetFunction)
     {
+        var toggle = GetElement<Toggle>(elementName);
+        toggle.RegisterCallback<ChangeEvent<bool>>(e =>
+        {
+            targetFunction?.Invoke(e.newValue);
+        });
+    }
+
+    protected void BindFocusOut(string elementName, Action targetFunction)
+    {
+        var field = GetElement<VisualElement>(elementName);
+        field.RegisterCallback<FocusOutEvent>((e) =>
+        {
+            targetFunction?.Invoke();
+        });
+    }
+
+    protected void SetLabel(string elementName, string txt, bool acceptEmpty = false)
+    {
+        if (!acceptEmpty && string.IsNullOrEmpty(txt))
+            txt = "(empty)";
+
         var el = GetElement<VisualElement>(elementName);
         if(el is Label label) label.text = txt;
         else if (el is LabelField labelField) labelField.UpdateText(txt);
         else if (el is Button btn) btn.text = txt;
         else if (el is TextField txtbx) txtbx.value = txt;
-        else throw new Exception($"Element \'{elementName}\' is not a Label or LabelField...");
+        else throw new Exception($"Element '{elementName}' is not a Label or LabelField...");
     }
 
     protected void SetLabel(string elementName, object txt)
@@ -181,7 +219,7 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
             return;
         }
 
-        throw new Exception($"Element \'{elementName}\' is not a Toggle...");
+        throw new Exception($"Element '{elementName}' is not a Toggle...");
     }
 
     protected bool GetToggleValue(string elementName)
@@ -189,7 +227,7 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         var el = GetElement<VisualElement>(elementName);
         if (el is Toggle tgl) return tgl.value;
 
-        throw new Exception($"Element \'{elementName}\' is not a Toggle...");
+        throw new Exception($"Element '{elementName}' is not a Toggle...");
     }
 
     protected string GetValue(string elementName)
@@ -198,7 +236,7 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         if (el is Label lbl) return lbl.text;
         if (el is TextField txt) return txt.value;
 
-        throw new Exception($"Element \'{elementName}\' is not a Label or TextField...");
+        throw new Exception($"Element '{elementName}' is not a Label or TextField...");
     }
 
     protected bool TryGetValue<TVal>(string elementName, out TVal value, bool throwOnFail = false)
@@ -229,16 +267,31 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         }
         catch (Exception ex)
         {
-            ViewManager.Exception.Show(new Exception($"Failed to cast \'{strVal}\' (element=\'{elementName}\' into \'{typeof(TVal).Name}\'", ex));
+            ViewManager.Exception.Show(new Exception($"Failed to cast '{strVal}' (element='{elementName}' into '{typeof(TVal).Name}'", ex));
         }
 
         return default;
     }
 
-    public async void Refresh(bool refreshData = true)
+    public void Refresh(bool refreshData = true)
     {
-        if(refreshData) await OnRefreshData();
-        OnRefreshUI();
+        _ = RefreshAsync(refreshData);
+    }
+
+    public async System.Threading.Tasks.Task RefreshAsync(bool refreshData = true)
+    {
+        var seq = ++_refreshSequence;
+        try
+        {
+            if (refreshData) await OnRefreshData();
+            if (seq != _refreshSequence) return; // stale
+            OnRefreshUI();
+        }
+        catch(Exception ex)
+        {
+            if (ViewManager != null) ViewManager.Exception.Show(ex);
+            else Debug.LogException(ex);
+        }
     }
 
     public void Activate(SwitchArgs<T> args)
@@ -268,15 +321,26 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
 
         ViewTitle = ViewManager.GetTitle(ViewId);
 
-        OnBindElements(View.rootVisualElement);
+        _uiElementsBound = false; //override
+        if (!_uiElementsBound)
+        {
+            OnBindElements(View.rootVisualElement);
+            _uiElementsBound = true;
+        }
         OnActivate();
 
-        Refresh(!(args.SkipRefreshData || NoDataRefresh));
+        _ = RefreshAsync(!(args.SkipRefreshData || NoDataRefresh));
 
         if (BackTargetArgs == null || BackTargetArgs.Target == null)
             ShowNavigateBack = false;
 
         //Update Header
+        UpdateHeader(ViewTitle);
+    }
+
+    public void SetViewTitle(string title)
+    {
+        ViewTitle = title;
         UpdateHeader(ViewTitle);
     }
 
@@ -292,6 +356,8 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
     public void Deactivate()
     {
         OnDeactivate();
+        // invalidate in-flight refresh
+        _refreshSequence++;
         gameObject.SetActive(false);
     }
 
@@ -366,7 +432,7 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
 
     protected virtual void OnBindElements(VisualElement root)
     {
-        //Dynamic
+        // Bind once per instance to avoid repeated reflection cost
         var fields = GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public);
         foreach (var info in fields)
         {
@@ -389,7 +455,7 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         catch (Exception ex)
         {
             var txt = GetElement<TextField>(elementName); //Should be Textfield (would throw during ValidateInput)
-            ViewManager.HandleException(new Exception($"({callerMemberName}) Input for \'{txt.label}\' invalid... (expected type = {typeof(TVal).Name})", ex));
+            ViewManager.HandleException(new Exception($"({callerMemberName}) Input for '{txt.label}' invalid... (expected type = {typeof(TVal).Name})", ex));
         }
 
         return false;
@@ -402,13 +468,13 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
         {
             if (string.IsNullOrEmpty(txt.value))
             {
-                ViewManager.Exception.Show($"({callerMemberName}) Input for \'{txt.label}\' can not be empty...");
+                ViewManager.Exception.Show($"({callerMemberName}) Input for '{txt.label}' can not be empty...");
                 return false;
             }
         }
         else
         {
-            ViewManager.Exception.Show($"({callerMemberName}) Failed to ValidateInput for \'{el.name}\' (unknown type)");
+            ViewManager.Exception.Show($"({callerMemberName}) Failed to ValidateInput for '{el.name}' (unknown type)");
             return false;
         }
 
@@ -419,7 +485,7 @@ public abstract class SampleViewBase<T> : MonoBehaviour where T : Enum
     {
         if (data == null)
         {
-            ViewManager.Exception.Show($"({callerMemberName}) No Value set for \'{dataName}\'.");
+            ViewManager.Exception.Show($"({callerMemberName}) No Value set for '{dataName}'.");
             return false;
         }
 

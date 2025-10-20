@@ -10,6 +10,14 @@ namespace Venly
 {
     public static class VenlyUnity
     {
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterAssembliesLoaded)]
+        private static void InitVyTaskScheduler()
+        {
+            // Guarantees ForegroundScheduler == Unity main thread
+            VyTaskBase.Initialize(TaskScheduler.FromCurrentSynchronizationContext());
+            VyTaskBase.IgnoreSchedulerOverride = true;
+        }
+
         public static VyTask Initialize(eVyBackendProvider backendProviderType, eVyEnvironment env)
         {
             return Initialize(backendProviderType.GetMemberName(), env);
@@ -39,6 +47,8 @@ namespace Venly
 
         private static VyTask Initialize(string providerType, eVyEnvironment env)
         {
+            //VenlyLog.ToggleLogLevel(VenlyLog.eVyLogLevel.Debug, true);
+
             //Setup Logger
             VenlyLog.OnLog += (logData) =>
             {

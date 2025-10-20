@@ -27,6 +27,8 @@ public class ApiExplorer_ExceptionVC : MonoBehaviour
 
     public void Show(Exception ex)
     {
+        if (ex == null) return;
+
         gameObject.SetActive(true);
 
         _exceptionMsg.text = ex.Message;

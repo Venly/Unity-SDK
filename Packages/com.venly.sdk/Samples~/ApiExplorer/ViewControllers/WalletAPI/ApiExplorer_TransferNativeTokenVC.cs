@@ -8,7 +8,7 @@ using Venly.Models.Wallet;
 public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_WALLET = "wallet";
+    public static readonly BlackboardKey<VyWalletDto> KEY_Wallet = new BlackboardKey<VyWalletDto>("wallet");
 
     //DATA
     private VyWalletDto _sourceWallet;
@@ -33,7 +33,7 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
         ShowNavigateHome = false;
 
         //Check if Source Is Set
-        TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET);
+        TryGet(KEY_Wallet, out _sourceWallet);
         ToggleElement("btn-select-source", _sourceWallet == null);
         UpdateSourceWallet(_sourceWallet);
     }
@@ -60,18 +60,20 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
             VenlyAPI.Wallet.GetUser(_sourceWallet.UserId)
                 .OnSuccess(user =>
                 {
-                    ViewManager.Loader.Show("Retrieving Associated User...");
-                    _sourceUser = user;
-                    ToggleElement("btn-transfer", true);
+                    using (ViewManager.BeginLoad("Retrieving Associated User..."))
+                    {
+                        _sourceUser = user;
+                        ToggleElement("btn-transfer", true);
+                    }
                 })
                 .OnFail(ex => ViewManager.HandleException(ex))
-                .Finally(() => ViewManager.Loader.Hide());
+                .Finally(() => { /* scope handles loader */ });
         }
     }
 
     protected override void OnDeactivate()
     {
-       ClearBlackboardData("sourceWallet");
+       ClearBlackboardData();
 
        _sourceWallet = null;
     }
@@ -85,12 +87,12 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
 
         //Update Wallet
         var selectedWallet = selection.Data as VyWalletDto; //Will have no Balance
-        ViewManager.Loader.Show("Refreshing Wallet Details...");
-        var result = await VenlyAPI.Wallet.GetWallet(selectedWallet.Id);
-        ViewManager.Loader.Hide();
-
-        if (result.Success) UpdateSourceWallet(result.Data);
-        else ViewManager.HandleException(result.Exception);
+        using (ViewManager.BeginLoad("Refreshing Wallet Details..."))
+        {
+            var result = await VenlyAPI.Wallet.GetWallet(selectedWallet.Id);
+            if (result.Success) UpdateSourceWallet(result.Data);
+            else ViewManager.HandleException(result.Exception);
+        }
     }
 
     private void OnClick_SelectTarget()
@@ -114,7 +116,7 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
         if (!ValidateInput("txt-target-address")) return;
         if (!ValidateInput<float>("txt-amount")) return;
 
-        var reqParams = new VyCreateTransferTransactionRequest()
+        var reqParams = new VyBuildTransferTransactionRequest()
         {
             Chain = _sourceWallet.Chain,
             WalletId = _sourceWallet?.Id,
@@ -130,16 +132,15 @@ public class ApiExplorer_TransferNativeTokenVC : SampleViewBase<eApiExplorerView
             return;
         }
 
-        ViewManager.Loader.Show("Transferring...");
-        VenlyAPI.Wallet.CreateTransaction_Transfer(reqParams, userAuth)
+        VenlyAPI.Wallet.TransferNativeToken(reqParams, userAuth)
+            .WithLoader(ViewManager, "Transferring...")
             .OnSuccess(transferInfo =>
             {
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXHASH, transferInfo.TransactionHash);
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXCHAIN, _sourceWallet.Chain);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxHash, transferInfo.TransactionHash);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxChain, _sourceWallet.Chain.Value);
                 ViewManager.SwitchView(eApiExplorerViewId.WalletApi_TransactionDetails, CurrentBackTarget);
             })
-            .OnFail(ViewManager.HandleException)
-            .Finally(ViewManager.Loader.Hide);
+            .OnFail(ViewManager.HandleException);
     }
     #endregion
 }

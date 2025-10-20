@@ -5,6 +5,34 @@ using UnityEngine;
 using Venly;
 using Venly.Core;
 using Venly.Models.Shared;
+using System.Threading;
+
+#region UnityMainThread Helper
+public static class UnityMainThread
+{
+    static SynchronizationContext _ctx;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    static void Capture()
+    {
+        _ctx = SynchronizationContext.Current; // Unity main thread
+    }
+
+    public static void Run(Action action)
+    {
+        if (action == null) return;
+
+        // If we're already on main thread, run inline
+        if (SynchronizationContext.Current == _ctx)
+        {
+            action();
+            return;
+        }
+
+        _ctx?.Post(_ => action(), null);
+    }
+}
+#endregion
 
 public class BackTargetArgs<T> where T : Enum
 {
@@ -73,8 +101,33 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
     private SampleViewBase<T> _currView = null;
     private T _homeViewId;
     private Dictionary<string, object> _globalBlackboard = new();
+    private Dictionary<T, string> _attributeTitles = new ();
 
     public static SampleViewManager<T> Instance { get; private set; }
+
+    public sealed class LoaderScope : System.IDisposable
+    {
+        private readonly ApiExplorer_LoaderVC _loader;
+        private bool _disposed;
+        public LoaderScope(ApiExplorer_LoaderVC loader, string message)
+        {
+            _loader = loader;
+            _loader?.Show(message);
+        }
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            _loader?.Hide();
+        }
+    }
+
+    public LoaderScope BeginLoad(string message)
+    {
+        return new LoaderScope(Loader, message);
+    }
+
+    public void RunOnMainThread(Action a) => UnityMainThread.Run(a);
 
     // Start is called before the first frame update
     void Start()
@@ -181,16 +234,20 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
         }
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (SetGlobalBlackboardData<T>), not string keys", true)]
     public void SetGlobalBlackboardData(string key, object data)
     {
         _globalBlackboard[key] = data;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (TryGetGlobalBlackboardData<T>), not string keys", true)]
     public object GetGlobalBlackboardDataRaw(string key)
     {
-        return _globalBlackboard[key];
+        if (_globalBlackboard.TryGetValue(key, out var obj)) return obj;
+        return null;
     }
 
+    [Obsolete("Use typed BlackboardKey APIs (TryGetGlobalBlackboardData<T>), not string keys", true)]
     public T0 GetGlobalBlackBoardData<T0>(string key) where T0 : class
     {
         return GetGlobalBlackboardDataRaw(key) as T0;
@@ -207,22 +264,39 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
         return _globalBlackboard.ContainsKey(key);
     }
 
-    public void ClearViewBlackboardData(T viewId, string key)
-    {
-        var view = GetView(viewId);
-        view.ClearBlackboardData(key);
-    }
-
     public void ClearViewBlackboardData(T viewId)
     {
         var view = GetView(viewId);
         view.ClearBlackboardData();
     }
 
-    public void SetViewBlackboardData(T viewId, string key, object data)
+    // Typed Blackboard helpers
+    public void SetViewBlackboardData<TVal>(T viewId, BlackboardKey<TVal> key, TVal data)
     {
         var view = GetView(viewId);
-        view.SetBlackboardData(key, data);
+        view.Set(key, data);
+    }
+
+    public void SetGlobalBlackboardData<TVal>(BlackboardKey<TVal> key, TVal data)
+    {
+        _globalBlackboard[key.Name] = data;
+    }
+
+    public bool TryGetGlobalBlackboardData<TVal>(BlackboardKey<TVal> key, out TVal value)
+    {
+        if (_globalBlackboard.TryGetValue(key.Name, out var obj) && obj is TVal cast)
+        {
+            value = cast;
+            return true;
+        }
+        value = default;
+        return false;
+    }
+
+    public void ClearGlobalBlackboardData<TVal>(BlackboardKey<TVal> key)
+    {
+        if (_globalBlackboard.ContainsKey(key.Name))
+            _globalBlackboard.Remove(key.Name);
     }
 
     public SampleViewBase<T> GetView(T viewId)
@@ -248,6 +322,21 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
             v.ViewManager = this;
             v.gameObject.SetActive(false);
         });
+
+        // Build attribute-driven titles
+        _attributeTitles.Clear();
+        foreach (var view in Views)
+        {
+            var meta = view.GetType().GetCustomAttributes(typeof(SampleViewMetaAttribute), false);
+            if (meta != null && meta.Length > 0)
+            {
+                var m = meta[0] as SampleViewMetaAttribute;
+                if (m != null && m.ViewId.Equals(view.ViewId))
+                {
+                    _attributeTitles[view.ViewId] = m.Title;
+                }
+            }
+        }
     }
 
     void OnFirstFrame()
@@ -264,5 +353,11 @@ public abstract class SampleViewManager<T> : MonoBehaviour where T : Enum
         }
 
         SwitchView(_homeViewId);
+    }
+
+    protected string GetTitleAttributeOrNull(T viewId)
+    {
+        if (_attributeTitles.TryGetValue(viewId, out var title)) return title;
+        return null;
     }
 }

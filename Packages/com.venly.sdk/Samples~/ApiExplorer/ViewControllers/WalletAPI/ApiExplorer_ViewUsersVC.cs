@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Venly;
 using Venly.Models.Wallet;
 
+[SampleViewMeta(eApiExplorerViewId.WalletApi_ViewUsers, "View Users")]
 public class ApiExplorer_ViewUsersVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA
@@ -21,29 +22,30 @@ public class ApiExplorer_ViewUsersVC : SampleViewBase<eApiExplorerViewId>
         _userList = null;
         _lstUsers.OnItemSelected += OnClick_User;
 
-        //Check for Cached Wallets
-        if (TryGetBlackboardData(out VyUserDto[] resultArr, globalKey: ApiExplorer_GlobalKeys.DATA_CachedUsers))
+        //Check for Cached Users
+        if (ViewManager.TryGetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_CachedUsers, out var cachedUsers))
         {
-            _userList = resultArr.ToList();
+            _userList = cachedUsers;
             NoDataRefresh = true;
         }
     }
 
     protected override async Task OnRefreshData()
     {
-        ViewManager.Loader.Show("Retrieving Users...");
-        var query = VyQuery_GetUsers.Create().IncludeSigningMethods(true);
-        var result = await VenlyAPI.Wallet.GetUsers(query);
-        ViewManager.Loader.Hide();
-
-        if (result.Success)
+        using (ViewManager.BeginLoad("Retrieving Users..."))
         {
-            _userList = result.Data.ToList();
+            var query = VyQuery_GetUsers.Create().IncludeSigningMethods(true);
+            var result = await VenlyAPI.Wallet.GetUsers(query);
 
-            //Store to global
-            ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_CachedUsers, result.Data);
+            if (result.Success)
+            {
+                _userList = result.Data.ToList();
+
+                //Store to global
+                ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_CachedUsers, _userList);
+            }
+            else ViewManager.HandleException(result.Exception);
         }
-        else ViewManager.HandleException(result.Exception);
     }
 
     protected override void OnRefreshUI()
@@ -63,7 +65,7 @@ public class ApiExplorer_ViewUsersVC : SampleViewBase<eApiExplorerViewId>
             return;
         }
 
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_UserDetails, ApiExplorer_UserDetailsVC.DATAKEY_USER, user);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_UserDetails, ApiExplorer_UserDetailsVC.KEY_User, user);
         ViewManager.SwitchView(eApiExplorerViewId.WalletApi_UserDetails);
     }
     #endregion

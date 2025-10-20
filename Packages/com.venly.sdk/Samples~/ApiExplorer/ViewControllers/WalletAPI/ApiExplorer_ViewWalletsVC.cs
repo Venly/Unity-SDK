@@ -4,8 +4,12 @@ using System.Threading.Tasks;
 using Venly;
 using Venly.Models.Wallet;
 
+[SampleViewMeta(eApiExplorerViewId.WalletApi_ViewWallets, "View Wallets")]
 public class ApiExplorer_ViewWalletsVC : SampleViewBase<eApiExplorerViewId>
 {
+    //Flag
+    public bool EnforceUserId = true;
+
     //DATA
     private List<VyWalletDto> _walletList = null;
 
@@ -22,28 +26,35 @@ public class ApiExplorer_ViewWalletsVC : SampleViewBase<eApiExplorerViewId>
         _lstWallets.OnItemSelected += OnClick_Wallet;
 
         //Check for Cached Wallets
-        if (TryGetBlackboardData(out VyWalletDto[] resultArr, globalKey: ApiExplorer_GlobalKeys.DATA_AllWalletsCached))
+        if (ViewManager.TryGetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_CachedWallets, out var cachedWallets))
         {
-            _walletList = resultArr.ToList();
+            _walletList = cachedWallets;
             NoDataRefresh = true;
         }
     }
 
     protected override async Task OnRefreshData()
     {
-        ViewManager.Loader.Show("Retrieving Wallets...");
-        var query = VyQuery_GetWallets.Create().IncludeBalance(false);
-        var result = await VenlyAPI.Wallet.GetWallets(query);
-        ViewManager.Loader.Hide();
-
-        if (result.Success)
+        using (ViewManager.BeginLoad("Retrieving Wallets..."))
         {
-            _walletList = result.Data.ToList();
+            var query = VyQuery_GetWallets
+                .Create()
+                .IncludeBalance(false)
+                .IncludeUsers(true);
+            var result = await VenlyAPI.Wallet.GetWallets(query);
 
-            //Store to global
-            ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_AllWalletsCached, result.Data);
+            if (result.Success)
+            {
+                _walletList = result.Data.OrderByDescending(w => w.CreatedAt).ToList();
+
+                if (EnforceUserId)
+                    _walletList = _walletList.Where(w => !string.IsNullOrEmpty(w.UserId)).ToList();
+
+                //Store to global
+                ViewManager.SetGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_CachedWallets, _walletList);
+            }
+            else ViewManager.HandleException(result.Exception);
         }
-        else ViewManager.HandleException(result.Exception);
     }
 
     protected override void OnRefreshUI()
@@ -63,8 +74,13 @@ public class ApiExplorer_ViewWalletsVC : SampleViewBase<eApiExplorerViewId>
             return;
         }
 
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.DATAKEY_WALLET, wallet);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.KEY_Wallet, wallet);
         ViewManager.SwitchView(eApiExplorerViewId.WalletApi_WalletDetails);
     }
     #endregion
+
+    protected override void OnDeactivate()
+    {
+        if (_lstWallets != null) _lstWallets.OnItemSelected -= OnClick_Wallet;
+    }
 }

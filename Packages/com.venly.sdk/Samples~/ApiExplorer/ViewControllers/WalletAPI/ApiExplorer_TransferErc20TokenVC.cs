@@ -9,13 +9,17 @@ using Venly.Models.Wallet;
 public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_WALLET = "wallet";
-    public const string DATAKEY_TOKEN = "token";
+    public static readonly BlackboardKey<VyWalletDto> KEY_Wallet = new BlackboardKey<VyWalletDto>("wallet");
+    public static readonly BlackboardKey<VyErc20TokenDto> KEY_Token = new BlackboardKey<VyErc20TokenDto>("token");
 
     //DATA
     private VyWalletDto _sourceWallet;
     private VyUserDto _sourceUser;
     private VyErc20TokenDto _sourceToken;
+
+    //UI
+    [UIBind("btn-select-source-wallet")] private Button _btnSelectSourceWallet;
+    [UIBind("btn-select-source-token")] private Button _btnSelectSourceToken;
 
     public ApiExplorer_TransferErc20TokenVC() : 
         base(eApiExplorerViewId.WalletApi_TransferErc20Token) { }
@@ -23,6 +27,8 @@ public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewI
     #region DATA & UI
     protected override void OnBindElements(VisualElement root)
     {
+        base.OnBindElements(root);
+
         BindButton("btn-select-source-wallet", OnClick_SelectSourceWallet);
         BindButton("btn-select-source-token", OnClick_SelectSourceToken);
         BindButton("btn-select-target", OnClick_SelectTarget);
@@ -34,47 +40,25 @@ public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewI
         ShowRefresh = false;
         ShowNavigateHome = false;
 
-        _sourceWallet = null;
-        _sourceToken = null;
-
         //Check if Source Is Set
-        TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET);
+        TryGet(KEY_Wallet, out _sourceWallet);
         ToggleElement("btn-select-source-wallet", _sourceWallet == null);
         UpdateSourceWallet(_sourceWallet);
 
         //Check if Token is Set
         if (_sourceWallet != null)
         {
-            TryGetBlackboardData(out _sourceToken, localKey: DATAKEY_TOKEN);
-            ToggleElement("btn-select-source-token", _sourceToken == null);
+            TryGet(KEY_Token, out _sourceToken);
+            _btnSelectSourceToken.ToggleDisplay(_sourceToken == null);
             UpdateSourceToken(_sourceToken);
         }
     }
 
     private void UpdateSourceWallet(VyWalletDto sourceWallet)
     {
-        if (_sourceWallet != sourceWallet) //new wallet, reset token
-        {
-            _sourceToken = null;
-        }
-
         _sourceWallet = sourceWallet;
 
-        if (_sourceWallet == null)
-        {
-            SetLabel("lbl-source-wallet", "select wallet");
-            SetLabel("lbl-source-token", "select wallet");
-            SetLabel("lbl-balance", "select wallet");
-        }
-        else
-        {
-            SetLabel("lbl-source-wallet", _sourceWallet.Id);
-            UpdateSourceToken(_sourceToken);
-        }
-
-        //Hide Select Token button if no wallet is selected yet
-        ToggleElement("btn-select-source-token", _sourceWallet != null);
-
+        SetLabel("lbl-source-wallet", _sourceWallet == null?"select wallet":_sourceWallet.Id);
 
         //Retrieve UserAuth
         if (_sourceWallet != null)
@@ -90,12 +74,14 @@ public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewI
             VenlyAPI.Wallet.GetUser(_sourceWallet.UserId)
                 .OnSuccess(user =>
                 {
-                    ViewManager.Loader.Show("Retrieving Associated User...");
-                    _sourceUser = user;
-                    ToggleElement("btn-transfer", true);
+                    using (ViewManager.BeginLoad("Retrieving Associated User..."))
+                    {
+                        _sourceUser = user;
+                        ToggleElement("btn-transfer", true);
+                    }
                 })
                 .OnFail(ex => ViewManager.HandleException(ex))
-                .Finally(() => ViewManager.Loader.Hide());
+                .Finally(() => { /* scope handles loader */ });
         }
     }
 
@@ -106,13 +92,13 @@ public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewI
         if (_sourceToken == null)
         {
             SetLabel("lbl-source-token", "select token");
-            SetLabel("lbl-balance", "select token");
         }
         else
         {
-            SetLabel("lbl-source-token", _sourceToken.Symbol);
-            SetLabel("lbl-balance", _sourceToken.Balance?.ToString(CultureInfo.InvariantCulture)??"NULL");
+            SetLabel("lbl-source-token", _sourceToken.Name);
         }
+
+        _btnSelectSourceToken.ToggleDisplay(_sourceWallet != null);
     }
 
     protected override void OnDeactivate()
@@ -121,10 +107,9 @@ public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewI
     }
     #endregion
 
-    #region EVENTS
     private void OnClick_SelectSourceToken()
     {
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_ViewErc20Tokens, "sourceWallet", _sourceWallet);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_ViewErc20Tokens, ApiExplorer_ViewTokensBaseVC<VyErc20TokenDto, VyControl_Erc20TokenListView, VyControl_Erc20TokenListItem>.KEY_SourceWallet, _sourceWallet);
         ViewManager.SelectionMode(eApiExplorerViewId.WalletApi_ViewErc20Tokens, "Select Token")
             .OnComplete(result =>
             {
@@ -162,21 +147,20 @@ public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewI
             });
     }
 
-
     private void OnClick_Transfer()
     {
         //Validate
         if (!ValidateData(_sourceWallet, "sourceWallet")) return;
         if (!ValidateData(_sourceUser, "sourceUser")) return;
         if (!ValidateData(_sourceToken, "sourceToken")) return;
+        if (!ValidateInput("txt-pincode")) return;
         if (!ValidateInput("txt-target-address")) return;
         if (!ValidateInput<float>("txt-amount")) return;
 
-        //Execute
-        var reqParams = new VyCreateTokenTransferTransactionRequest()
+        var reqParams = new VyBuildTokenTransferTransactionRequest()
         {
             Chain = _sourceWallet.Chain,
-            WalletId = _sourceWallet.Id,
+            WalletId = _sourceWallet?.Id,
             TokenAddress = _sourceToken.TokenAddress,
             To = GetValue("txt-target-address"),
             Value = GetValue<float>("txt-amount")
@@ -188,16 +172,15 @@ public class ApiExplorer_TransferErc20TokenVC : SampleViewBase<eApiExplorerViewI
             return;
         }
 
-        ViewManager.Loader.Show("Transferring...");
-        VenlyAPI.Wallet.CreateTransaction_TokenTransfer(reqParams, userAuth)
+
+        VenlyAPI.Wallet.TransferErc20Token(reqParams, userAuth)
+            .WithLoader(ViewManager, "Transferring...")
             .OnSuccess(transferInfo =>
             {
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXHASH, transferInfo.TransactionHash);
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXCHAIN, _sourceWallet.Chain);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxHash, transferInfo.TransactionHash);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxChain, _sourceWallet.Chain.Value);
                 ViewManager.SwitchView(eApiExplorerViewId.WalletApi_TransactionDetails, CurrentBackTarget);
             })
-            .OnFail(ViewManager.HandleException)
-            .Finally(ViewManager.Loader.Hide);
+            .OnFail(ViewManager.HandleException);
     }
-    #endregion
 }

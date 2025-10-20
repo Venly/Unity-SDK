@@ -4,7 +4,7 @@ using Venly.Models.Token;
 using Venly.Utils;
 
 //ITEM
-public class VyControl_ContractListItem : VyControl_ListViewItemBase<VyErc1155ContractDto>
+public class VyControl_ContractListItem : VyControl_ListViewItemBase<VyErc1155ContractSummaryDto>
 {
     //public VyControl_ContractListItem() : base("VyControl_ContractListItem") { }
 
@@ -16,12 +16,12 @@ public class VyControl_ContractListItem : VyControl_ListViewItemBase<VyErc1155Co
         AddLabel(root, "lbl-symbol", "Symbol");
     }
 
-    public override void BindItem(VyErc1155ContractDto sourceItem)
+    public override void BindItem(VyErc1155ContractSummaryDto sourceItem)
     {
-        SetLabel("lbl-name", sourceItem.Metadata.Name);
+        SetLabel("lbl-name", sourceItem.Name);
         SetLabel("lbl-chain", sourceItem.Chain.GetMemberName());
-        SetLabel("lbl-address", sourceItem.Metadata.ToString());
-        SetLabel("lbl-symbol", sourceItem.Metadata.Symbol);
+        SetLabel("lbl-address", sourceItem.Address);
+        SetLabel("lbl-symbol", sourceItem.Symbol);
     }
 
     public override void BindMockItem()
@@ -34,7 +34,7 @@ public class VyControl_ContractListItem : VyControl_ListViewItemBase<VyErc1155Co
 }
 
 //LIST VIEW
-public class VyControl_ContractListView : VyControl_ListViewBase<VyErc1155ContractDto, VyControl_ContractListItem>
+public class VyControl_ContractListView : VyControl_ListViewBase<VyErc1155ContractSummaryDto, VyControl_ContractListItem>
 {
     public new class UxmlFactory : UxmlFactory<VyControl_ContractListView, UxmlTraits> { }
 }

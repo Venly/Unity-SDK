@@ -1,8 +1,15 @@
 //Sample View Manager
+
+using Venly.Models.Token;
+using Venly.Models.Wallet;
+using System.Collections.Generic;
+
 public class ApiExplorer_ViewManager : SampleViewManager<eApiExplorerViewId>
 {
     public override string GetTitle(eApiExplorerViewId viewId)
     {
+        var metaTitle = GetTitleAttributeOrNull(viewId);
+        if (!string.IsNullOrEmpty(metaTitle)) return metaTitle;
         switch (viewId)
         {
             case eApiExplorerViewId.Unknown: return "Unknown";
@@ -84,15 +91,22 @@ public enum eApiExplorerViewId : uint
     TokenApi_MintErc1155Token = 35,
 
     Auth_UserPortal = 40,
+    WalletApi_ViewNftDetails = 41,
+
+    TokenApi_CreateErc1155Contract = 42,
+    TokenApi_CreateErc1155TokenType = 43,
 
     Count
 }
 
 public static class ApiExplorer_GlobalKeys
 {
-    public const string DATA_AllWalletsCached = "all-wallets-cache";
-    public const string DATA_CachedUsers = "cached-users";
-    public const string DATA_CachedErc1155Contracts = "cached-erc1155-contracts";
-    public const string DATA_Erc1155Contract = "erc1155-contract";
-    public const string DATA_User = "provider-user";
+    //public const string DATA_AllWalletsCached = "all-wallets-cache";
+    public static readonly BlackboardKey<List<VyWalletDto>> DATA_CachedWallets = new ("cached-wallets");
+    //public const string DATA_CachedUsers = "cached-users";
+    public static readonly BlackboardKey<List<VyUserDto>> DATA_CachedUsers= new ("cached-users");
+    //public const string DATA_CachedErc1155Contracts = "cached-erc1155-contracts";
+    public static readonly BlackboardKey<List<VyErc1155ContractSummaryDto>> DATA_CachedErc1155Contracts = new ("cached-erc1155-contracts");
+    //public const string DATA_Erc1155Contract = "erc1155-contract";
+    public static readonly BlackboardKey<VyUserDto> DATA_User = new ("provider-user");
 }

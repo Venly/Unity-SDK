@@ -219,6 +219,7 @@ public class VyControl_ListViewBase<TItem, TItemView> : ListView where TItemView
 #if !UNITY_EDITOR
         GenerateMockItems = false;
 #endif
+        Clear();
 
         makeItem = () => Activator.CreateInstance(typeof(TItemView)) as VisualElement;
         bindItem = (e, i) =>

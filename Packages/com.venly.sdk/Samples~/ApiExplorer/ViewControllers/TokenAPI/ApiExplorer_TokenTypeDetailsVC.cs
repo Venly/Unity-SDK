@@ -7,17 +7,20 @@ using Venly.Models.Shared;
 using Venly.Models.Token;
 using Venly.Utils;
 
+[SampleViewMeta(eApiExplorerViewId.TokenApi_Erc1155TokenTypeDetails, "Erc1155 Token Type Details")]
 public class ApiExplorer_TokenTypeDetailsVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_CONTRACT = "contract";
-    public const string DATAKEY_TOKENTYPE = "tokentype";
-    public const string DATAKEY_TOKENTYPE_SUMMARY = "tokentype-summary";
+    public static readonly BlackboardKey<VyErc1155ContractDto> KEY_Contract = new BlackboardKey<VyErc1155ContractDto>("contract");
+    //public static readonly BlackboardKey<eVyChain> KEY_ContractChain = new BlackboardKey<eVyChain>("contract-chain");
+    public static readonly BlackboardKey<int> KEY_TokenTypeId = new BlackboardKey<int>("tokentype-id");
 
     //DATA
-    private VyErc1155TokenTypeSummaryDto _tokenTypeSummary;
+    private VyErc1155ContractDto _contract;
+    //private eVyChain _contractChain;
+    private int _tokenTypeId;
+
     private VyErc1155TokenTypeDto _tokenType;
-    private VyErc1155ContractDto _sourceContract;
 
     //UI
     [UIBind("img-tokentype")] private VisualElement _imgToken;
@@ -46,34 +49,46 @@ public class ApiExplorer_TokenTypeDetailsVC : SampleViewBase<eApiExplorerViewId>
         _fldAttributes.value = false;
 
         //Retrieve Token from Blackboard (should be set by calling view)
-        TryGetBlackboardData(out _tokenTypeSummary, localKey: DATAKEY_TOKENTYPE_SUMMARY);
-        TryGetBlackboardData(out _sourceContract, localKey: DATAKEY_CONTRACT);
+        if (!TryGet(KEY_Contract, out _contract))
+        {
+            ViewManager.Exception.Show($"TokenTypeDetailsVC >> BlackboardData '{KEY_Contract.Name}' not set...");
+        }
+
+        //if (!TryGet(KEY_ContractChain, out _contractChain))
+        //{
+        //    ViewManager.Exception.Show($"TokenTypeDetailsVC >> BlackboardData '{KEY_ContractChain.Name}' not set...");
+        //}
+
+        if (!TryGet(KEY_TokenTypeId, out _tokenTypeId))
+        {
+            ViewManager.Exception.Show($"TokenTypeDetailsVC >> BlackboardData '{KEY_TokenTypeId.Name}' not set...");
+        }
     }
 
     protected override async Task OnRefreshData()
     {
-        ViewManager.Loader.Show("Refreshing TokenType...");
-        var result = await VenlyAPI.Token.GetErc1155TokenType(_sourceContract.Chain,_sourceContract.Address, _tokenTypeSummary.TokenTypeId);
-        ViewManager.Loader.Hide();
-
-        if(result.Success) _tokenType = result.Data;
-        else ViewManager.HandleException(result.Exception);
+        using (ViewManager.BeginLoad("Refreshing TokenType..."))
+        {
+            var result = await VenlyAPI.Token.GetErc1155TokenType(_contract.Chain, _contract.Address, _tokenTypeId);
+            if(result.Success) _tokenType = result.Data;
+            else ViewManager.HandleException(result.Exception);
+        }
     }
 
     protected override void OnRefreshUI()
     {
-        if (!ValidateData(_sourceContract, DATAKEY_CONTRACT)) return;
-        if (!ValidateData(_tokenType, DATAKEY_TOKENTYPE)) return;
+        if (!ValidateData(_contract, "contract")) return;
+        if (!ValidateData(_tokenType, "tokentype")) return;
 
         //Set Data
         SetLabel("lbl-token-id", _tokenType.TokenTypeId.ToString());
         SetLabel("lbl-token-name", _tokenType.Metadata.Name);
         SetLabel("lbl-token-description", _tokenType.Metadata.Description);
         SetLabel("lbl-token-supply", $"{_tokenType.Supply.Current} / {_tokenType.Supply.Max}");
-        SetLabel("lbl-token-chain", _sourceContract.Chain.GetMemberName());
+        SetLabel("lbl-token-chain", _contract.Chain.GetMemberName());
         SetLabel("lbl-token-externalUrl", _tokenType.Metadata.ExternalUrl);
         SetLabel("lbl-token-fungible", _tokenType.Metadata.Fungible??false ? "YES" : "NO");
-        SetLabel("lbl-contract-name", $"{_sourceContract.Metadata.Name}");
+        SetLabel("lbl-contract-name", $"{_contract.Metadata.Name}");
 
         _lstAnimationUrls.SetItemSource(_tokenType.Metadata.AnimationUrls);
         _lstAnimationUrls.ToggleDisplay(_tokenType.Metadata.AnimationUrls.Length > 0);
@@ -97,21 +112,24 @@ public class ApiExplorer_TokenTypeDetailsVC : SampleViewBase<eApiExplorerViewId>
         });
 
         //Image
-        VenlyUnityUtils.DownloadImage(_tokenType.Metadata.Image)
-            .OnComplete(result =>
-            {
-                ToggleElement("img-container", result.Success);
-                if (result.Success)_imgToken.style.backgroundImage = new StyleBackground(result.Data);
-                else VenlyLog.Exception(result.Exception);
-            });
+        if (!string.IsNullOrEmpty(_tokenType.Metadata.Image))
+        {
+            VenlyUnityUtils.DownloadImage(_tokenType.Metadata.Image)
+                .OnComplete(result =>
+                {
+                    ToggleElement("img-container", result.Success);
+                    if (result.Success) _imgToken.style.backgroundImage = new StyleBackground(result.Data);
+                    else VenlyLog.Exception(result.Exception);
+                });
+        }
     }
     #endregion
 
     #region EVENTS
     private void onClick_Mint()
     {
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_MintErc1155Token, ApiExplorer_MintTokenVC.DATAKEY_CONTRACT, _sourceContract);
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_MintErc1155Token, ApiExplorer_MintTokenVC.DATAKEY_TOKENTYPE_SUMMARY, _tokenTypeSummary);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_MintErc1155Token, ApiExplorer_MintTokenVC.KEY_Contract, _contract);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_MintErc1155Token, ApiExplorer_MintTokenVC.KEY_TokenType, _tokenType);
         ViewManager.SwitchView(eApiExplorerViewId.TokenApi_MintErc1155Token, ViewId, false);
     }
     #endregion

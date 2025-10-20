@@ -10,7 +10,7 @@ public class ApiExplorer_CreateWalletVC : SampleViewBase<eApiExplorerViewId>
 {
     [UIBind("selector-chain")] private DropdownField _selectorChains;
 
-    public const string DATAKEY_USER = "user";
+    public static readonly BlackboardKey<VyUserDto> KEY_User = new BlackboardKey<VyUserDto>("user");
 
     private VyUserDto _user;
     private bool _hasExistingUser => _user != null;
@@ -31,10 +31,10 @@ public class ApiExplorer_CreateWalletVC : SampleViewBase<eApiExplorerViewId>
         ShowRefresh = false;
 
         //Populate Selector
-        _selectorChains.FromEnum(eVyChain.Matic);
+        _selectorChains.FromEnum(eVyChain.Sui);
 
         //Get User
-        TryGetBlackboardData(out _user, DATAKEY_USER);
+        TryGet(KEY_User, out _user);
     }
 
     #endregion
@@ -56,17 +56,16 @@ public class ApiExplorer_CreateWalletVC : SampleViewBase<eApiExplorerViewId>
                 }
             };
 
-            ViewManager.Loader.Show("Creating User..");
-            var userResult = await VenlyAPI.Wallet.CreateUser(createUser);
-            ViewManager.Loader.Hide();
-
-            if (!userResult.Success)
+            using (ViewManager.BeginLoad("Creating User.."))
             {
-                ViewManager.HandleException(userResult.Exception);
-                return;
+                var userResult = await VenlyAPI.Wallet.CreateUser(createUser);
+                if (!userResult.Success)
+                {
+                    ViewManager.HandleException(userResult.Exception);
+                    return;
+                }
+                _user = userResult.Data;
             }
-
-            _user = userResult.Data;
         }
 
         //Get UserAuth
@@ -86,18 +85,18 @@ public class ApiExplorer_CreateWalletVC : SampleViewBase<eApiExplorerViewId>
             UserId = _user.Id
         };
 
-        ViewManager.Loader.Show("Creating Wallet..");
-        var walletResult = await VenlyAPI.Wallet.CreateWallet(createParams, userAuth);
-        ViewManager.Loader.Hide();
-
-        if (!walletResult.Success)
+        using (ViewManager.BeginLoad("Creating Wallet.."))
         {
-            ViewManager.HandleException(walletResult.Exception);
-            return;
-        }
+            var walletResult = await VenlyAPI.Wallet.CreateWallet(createParams, userAuth);
+            if (!walletResult.Success)
+            {
+                ViewManager.HandleException(walletResult.Exception);
+                return;
+            }
 
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.DATAKEY_WALLET, walletResult.Data);
-        ViewManager.SwitchView(eApiExplorerViewId.WalletApi_WalletDetails, CurrentBackTarget);
+            ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.KEY_Wallet, walletResult.Data);
+            ViewManager.SwitchView(eApiExplorerViewId.WalletApi_WalletDetails, CurrentBackTarget);
+        }
     }
     #endregion
 }

@@ -2,7 +2,7 @@
     <Style src="project://database/Assets/Samples/Shared/SampleSharedStyle.uss?fileID=7433441132597879392&amp;guid=87b612c5c3ef33c4cb5833fee346054f&amp;type=3#SampleSharedStyle" />
     <ui:VisualElement name="root" class="sample-main-background" style="flex-grow: 1;">
         <SampleControl_Header />
-        <ui:VisualElement style="margin-top: 10px; margin-bottom: 40px; margin-left: 20px; margin-right: 20px;">
+        <ui:VisualElement style="margin-top: 30px; margin-bottom: 40px; margin-left: 20px; margin-right: 20px;">
             <ui:TextField picking-mode="Ignore" label="Reference" name="txt-reference" binding-path="Reference" />
             <ui:TextField picking-mode="Ignore" label="Pin Code" name="txt-pincode" binding-path="Pincode" />
         </ui:VisualElement>

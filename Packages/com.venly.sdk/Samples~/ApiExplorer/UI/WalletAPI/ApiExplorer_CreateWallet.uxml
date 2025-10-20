@@ -2,7 +2,7 @@
     <Style src="project://database/Assets/Samples/Shared/SampleSharedStyle.uss?fileID=7433441132597879392&amp;guid=87b612c5c3ef33c4cb5833fee346054f&amp;type=3#SampleSharedStyle" />
     <ui:VisualElement name="root" class="sample-main-background" style="flex-grow: 1;">
         <SampleControl_Header />
-        <ui:VisualElement style="margin-top: 10px; margin-bottom: 40px; margin-left: 20px; margin-right: 20px;">
+        <ui:VisualElement style="margin-top: 30px; margin-bottom: 40px; margin-left: 20px; margin-right: 20px;">
             <ui:DropdownField label="Chain" index="-1" choices="System.Collections.Generic.List`1[System.String]" name="selector-chain" binding-path="ChainOptions" />
             <ui:TextField picking-mode="Ignore" label="Identifier" name="txt-identifier" binding-path="Identifier" />
             <ui:TextField picking-mode="Ignore" label="Description" multiline="true" name="txt-description" binding-path="Description" style="flex-grow: 1; flex-shrink: 1;" />

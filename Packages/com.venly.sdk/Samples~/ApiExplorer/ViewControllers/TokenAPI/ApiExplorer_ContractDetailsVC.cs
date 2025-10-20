@@ -7,14 +7,17 @@ using Venly.Models.Shared;
 using Venly.Models.Token;
 using Venly.Utils;
 
+[SampleViewMeta(eApiExplorerViewId.TokenApi_Erc1155ContractDetails, "Erc1155 Contract Details")]
 public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
 {
-    //TODO: Remove Contract Id
-
     //DATA-KEYS
-    public const string DATAKEY_CONTRACT = "contract";
+    public static readonly BlackboardKey<string> KEY_ContractAddr = new BlackboardKey<string>("contract-addr");
+    public static readonly BlackboardKey<eVyChain> KEY_ContractChain = new BlackboardKey<eVyChain>("contract-chain");
 
     //DATA
+    private static string _contractAddr;
+    private static eVyChain _contractChain;
+
     private VyErc1155ContractDto _contract;
     private VyErc1155TokenTypeSummaryDto[] _tokenTypes;
     private Texture2D _contractImage;
@@ -24,8 +27,11 @@ public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
 
     protected override void OnBindElements(VisualElement root)
     {
+        base.OnBindElements(root);
+
         BindButton("btn-tokenTypes", onClick_ShowTokenTypes);
         BindButton("btn-archive", onClick_Archive);
+        BindButton("btn-create-tokentype", onClick_CreateTokenType);
 
         //Only show Archive Button when DevMode is active
         ToggleElement("btn-archive", VenlySettings.BackendProvider == eVyBackendProvider.DevMode);
@@ -35,49 +41,55 @@ public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
     {
         _contract = null;
 
-
-        if (!TryGetBlackboardData(out _contract, localKey:DATAKEY_CONTRACT))
+        if (!TryGet(KEY_ContractAddr, out _contractAddr))
         {
-            ViewManager.Exception.Show($"ContractDetailsVC >> BlackboardData \'{DATAKEY_CONTRACT}\' not set...");
+            ViewManager.Exception.Show($"ContractDetailsVC >> BlackboardData '{KEY_ContractAddr.Name}' not set...");
         }
+
+        if (!TryGet(KEY_ContractChain, out _contractChain))
+        {
+            ViewManager.Exception.Show($"ContractDetailsVC >> BlackboardData '{KEY_ContractChain.Name}' not set...");
+        }
+
+        ViewTitle = $"{_contractChain} Contract Details";
+        NoDataRefresh = false;
     }
 
     protected override async Task OnRefreshData()
     {
         //Retrieve Contract Data
         //----------------------
-        ViewManager.Loader.Show("Retrieving ERC1155 Contract Info...");
-        var result = await VenlyAPI.Token.GetErc1155Contract(_contract.Chain, _contract.Address);
-        ViewManager.Loader.Hide();
-
-        if (!result.Success)
+        using (ViewManager.BeginLoad("Retrieving ERC1155 Contract Info..."))
         {
-            ViewManager.HandleException(result.Exception);
-            return;
+            var result = await VenlyAPI.Token.GetErc1155Contract(_contractChain, _contractAddr);
+            if (!result.Success)
+            {
+                ViewManager.HandleException(result.Exception);
+                return;
+            }
+            _contract = result.Data;
         }
-        _contract = result.Data;
-
 
         //Retrieve Token Types
         //----------------------------
-        ViewManager.Loader.Show("Retrieving ERC1155 Token Types...");
-        var tokenTypesResult = await VenlyAPI.Token.GetErc1155TokenTypes(_contract.Chain, _contract.Address);
-        ViewManager.Loader.Hide();
-
-        if (!tokenTypesResult.Success)
+        using (ViewManager.BeginLoad("Retrieving ERC1155 Token Types..."))
         {
-            ViewManager.HandleException(result.Exception);
-            return;
+            var tokenTypesResult = await VenlyAPI.Token.GetErc1155TokenTypes(_contract.Chain, _contract.Address);
+            if (!tokenTypesResult.Success)
+            {
+                ViewManager.HandleException(tokenTypesResult.Exception);
+                return;
+            }
+            _tokenTypes = tokenTypesResult.Data;
         }
-        _tokenTypes = tokenTypesResult.Data;
 
         //Retrieve Image
         //--------------
-        ViewManager.Loader.Show("Retrieving Contract Image...");
-        var imageResult = await VenlyUnityUtils.DownloadImage(_contract.Metadata.Image);
-        ViewManager.Loader.Hide();
-
-        _contractImage = imageResult.Success ? imageResult.Data : null;
+        using (ViewManager.BeginLoad("Retrieving Contract Image..."))
+        {
+            var imageResult = await VenlyUnityUtils.DownloadImage(_contract.Metadata.Image);
+            _contractImage = imageResult.Success ? imageResult.Data : null;
+        }
     }
 
     protected override void OnRefreshUI()
@@ -109,25 +121,31 @@ public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
     {
 #region DevMode Only (SERVER)
 #if ENABLE_VENLY_DEV_MODE
-        ViewManager.Loader.Show("Archiving Contract...");
-        var result = await VenlyAPI.Token.ArchiveErc1155Contract(_contract.Chain, _contract.Address);
-        ViewManager.Loader.Hide();
-
-        if (result.Success)
+        using (ViewManager.BeginLoad("Archiving Contract..."))
         {
-            //Reset Global Contracts Cache & return to list
-            ViewManager.ClearGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_CachedErc1155Contracts);
-            ViewManager.SwitchView(eApiExplorerViewId.TokenApi_ViewErc1155Contracts);
+            var result = await VenlyAPI.Token.ArchiveErc1155Contract(_contract.Chain, _contract.Address);
+
+            if (result.Success)
+            {
+                ViewManager.ClearGlobalBlackboardData(ApiExplorer_GlobalKeys.DATA_CachedErc1155Contracts);
+                ViewManager.SwitchView(eApiExplorerViewId.TokenApi_ViewErc1155Contracts);
+            }
+            else ViewManager.HandleException(result.Exception);
         }
-        else ViewManager.HandleException(result.Exception);
 #endif
 #endregion
     }
 
     private void onClick_ShowTokenTypes()
     {
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes, "sourceContract", _contract);
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes, "tokenTypes", _tokenTypes);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes, ApiExplorer_ViewTokenTypesVC.KEY_Contract, _contract);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes, ApiExplorer_ViewTokenTypesVC.KEY_TokenTypes, _tokenTypes);
         ViewManager.SwitchView(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes);
+    }
+
+    private void onClick_CreateTokenType()
+    {
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_CreateErc1155TokenType, ApiExplorer_CreateErc1155TokenTypeVC.KEY_Contract, _contract);
+        ViewManager.SwitchView(eApiExplorerViewId.TokenApi_CreateErc1155TokenType);
     }
 }
