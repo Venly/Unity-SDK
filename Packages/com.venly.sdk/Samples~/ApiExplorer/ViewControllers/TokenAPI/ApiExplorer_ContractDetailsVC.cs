@@ -110,7 +110,7 @@ public class ApiExplorer_ContractDetailsVC : SampleViewBase<eApiExplorerViewId>
 #region DevMode Only (SERVER)
 #if ENABLE_VENLY_DEV_MODE
         ViewManager.Loader.Show("Archiving Contract...");
-        var result = await VenlyAPI.Token.ArchiveErc20Contract(_contract.Chain, _contract.Address);
+        var result = await VenlyAPI.Token.ArchiveErc1155Contract(_contract.Chain, _contract.Address);
         ViewManager.Loader.Hide();
 
         if (result.Success)
