@@ -4,11 +4,12 @@ using UnityEngine.UIElements;
 using Venly;
 using Venly.Models.Wallet;
 
+[SampleViewMeta(eApiExplorerViewId.WalletApi_UserDetails, "User Details")]
 public class ApiExplorer_UserDetailsVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_USER = "user";
-    public const string DATAKEY_USER_ID = "user-id";
+    public static readonly BlackboardKey<VyUserDto> KEY_User = new BlackboardKey<VyUserDto>("user");
+    public static readonly BlackboardKey<string> KEY_UserId = new BlackboardKey<string>("user-id");
 
     //DATA
     private VyUserDto _user;
@@ -37,7 +38,7 @@ public class ApiExplorer_UserDetailsVC : SampleViewBase<eApiExplorerViewId>
         }
         else ViewManager.HandleException(new Exception("lstWallets is null"));
 
-        if (!TryGetBlackboardData(out _user, DATAKEY_USER, ApiExplorer_GlobalKeys.DATA_User))
+        if (!TryGet(KEY_User, out _user))
         {
             NoDataRefresh = false;
         }
@@ -47,7 +48,7 @@ public class ApiExplorer_UserDetailsVC : SampleViewBase<eApiExplorerViewId>
     {
         string userId = null;
         if (_user != null) userId = _user.Id;
-        else if (!TryGetBlackboardData(out userId, DATAKEY_USER_ID))
+        else if (!TryGet(KEY_UserId, out userId))
         {
             ViewManager.HandleException(new ArgumentException("Failed to retrieve the user id..."));
             return;
@@ -55,39 +56,38 @@ public class ApiExplorer_UserDetailsVC : SampleViewBase<eApiExplorerViewId>
 
         //Retrieve User Data
         //--------------------
-        ViewManager.Loader.Show("Retrieving User Info...");
-        var result = await VenlyAPI.Wallet.GetUser(userId);
-        ViewManager.Loader.Hide();
-
-        if (!result.Success)
+        using (ViewManager.BeginLoad("Retrieving User Info..."))
         {
-            ViewManager.HandleException(result.Exception);
-            return;
+            var result = await VenlyAPI.Wallet.GetUser(userId);
+            if (!result.Success)
+            {
+                ViewManager.HandleException(result.Exception);
+                return;
+            }
+            _user = result.Data;
+            Set(KEY_User, _user); //Update Blackboard (contains Balance now)
         }
-
-        _user = result.Data;
-        SetBlackboardData(DATAKEY_USER, _user); //Update Blackboard (contains Balance now)
 
         //Retrieve Wallets 
         //----------------
-        ViewManager.Loader.Show("Retrieving Wallets...");
-        var walletResult = await VenlyAPI.Wallet.GetWallets(VyQuery_GetWallets.Create().UserId(_user.Id));
-        ViewManager.Loader.Hide();
-
-        if (!walletResult.Success)
+        using (ViewManager.BeginLoad("Retrieving Wallets..."))
         {
-            ViewManager.HandleException(result.Exception);
-            _userWallets = Array.Empty<VyWalletDto>();
-        }
-        else
-        {
-            _userWallets = walletResult.Data;
+            var walletResult = await VenlyAPI.Wallet.GetWallets(VyQuery_GetWallets.Create().UserId(_user.Id));
+            if (!walletResult.Success)
+            {
+                ViewManager.HandleException(walletResult.Exception);
+                _userWallets = Array.Empty<VyWalletDto>();
+            }
+            else
+            {
+                _userWallets = walletResult.Data;
+            }
         }
     }
 
     protected override void OnRefreshUI()
     {
-        if (!ValidateData(_user, DATAKEY_USER)) return;
+        if (!ValidateData(_user, "user")) return;
         if (!ValidateData(_userWallets, "user_wallets")) return;
 
         //Refresh UI Elements
@@ -103,13 +103,13 @@ public class ApiExplorer_UserDetailsVC : SampleViewBase<eApiExplorerViewId>
     #region EVENTS
     private async void OnClick_Wallet(VyWalletDto wallet)
     {
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.DATAKEY_WALLET, wallet);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.KEY_Wallet, wallet);
         ViewManager.SwitchView(eApiExplorerViewId.WalletApi_WalletDetails, ViewId, false);
     }
 
     private void OnClick_AddWallet()
     {
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_CreateWallet, ApiExplorer_CreateWalletVC.DATAKEY_USER, _user);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_CreateWallet, ApiExplorer_CreateWalletVC.KEY_User, _user);
         ViewManager.SwitchView(eApiExplorerViewId.WalletApi_CreateWallet, ViewId, true);
     }
     #endregion

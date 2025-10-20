@@ -14,8 +14,8 @@ public abstract class ApiExplorer_ViewTokensBaseVC<T, TListView, TListItem> : Sa
     { }
 
     //DATA-KEYS
-    public const string DATAKEY_TOKENLIST = "tokenList";
-    public const string DATAKEY_WALLET = "sourceWallet";
+    public static readonly BlackboardKey<T[]> KEY_TokenList = new ("tokenList");
+    public static readonly BlackboardKey<VyWalletDto> KEY_SourceWallet = new ("sourceWallet");
 
     //DATA
     protected TListView _lstTokens;
@@ -24,6 +24,7 @@ public abstract class ApiExplorer_ViewTokensBaseVC<T, TListView, TListItem> : Sa
 
     protected abstract eApiExplorerViewId DetailViewId { get; }
     protected abstract VyTask<T[]> GetTokenBalances(string walletId);
+    protected abstract BlackboardKey<T> DetailTokenKey { get; }
 
     #region DATA & UI
     protected override void OnBindElements(VisualElement root)
@@ -43,30 +44,31 @@ public abstract class ApiExplorer_ViewTokensBaseVC<T, TListView, TListItem> : Sa
 
         _lstTokens.OnItemSelected += onClick_Token;
 
-        if (TryGetBlackboardData(out T[] resultArr, localKey:DATAKEY_TOKENLIST))
+        if (TryGet(KEY_TokenList, out T[] resultArr))
         {
             _tokenList = resultArr.ToList();
             NoDataRefresh = true;
         } 
-        else if (TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET))
+        
+        if (TryGet(KEY_SourceWallet, out _sourceWallet))
         {
-            ShowRefresh = true; //Wallet present, refresh is possible
+            ShowRefresh = _tokenList == null; //Wallet present, refresh is possible
         }
     }
 
     protected override void OnDeactivate()
     {
-        //ClearBlackboardData();
+        if (_lstTokens != null) _lstTokens.OnItemSelected -= onClick_Token;
     }
 
     protected override async Task OnRefreshData()
     {
-        ViewManager.Loader.Show("Refreshing Tokens...");
-        var result = await GetTokenBalances(_sourceWallet.Id);
-        ViewManager.Loader.Hide();
-
-        if(result.Success) _tokenList = result.Data.ToList();
-        else ViewManager.HandleException(result.Exception);
+        using (ViewManager.BeginLoad("Refreshing Tokens..."))
+        {
+            var result = await GetTokenBalances(_sourceWallet.Id);
+            if(result.Success) _tokenList = result.Data.ToList();
+            else ViewManager.HandleException(result.Exception);
+        }
     }
 
     protected override void OnRefreshUI()
@@ -86,10 +88,12 @@ public abstract class ApiExplorer_ViewTokensBaseVC<T, TListView, TListItem> : Sa
             return;
         }
 
-        ViewManager.SetViewBlackboardData(DetailViewId, ApiExplorer_TokenDetailsDataKeys.DATAKEY_TOKEN, token);
+        ViewManager.SetViewBlackboardData(DetailViewId, DetailTokenKey, token);
 
-        var wallet = GetBlackBoardData<VyWalletDto>(DATAKEY_WALLET);
-        ViewManager.SetViewBlackboardData(DetailViewId, ApiExplorer_TokenDetailsDataKeys.DATAKEY_WALLET, wallet);
+        if (TryGet(KEY_SourceWallet, out var wallet))
+        {
+            ViewManager.SetViewBlackboardData(DetailViewId, ApiExplorer_TokenDetailsDataKeys.KEY_WALLET, wallet);
+        }
 
         ViewManager.SwitchView(DetailViewId, ViewId, false);
     }

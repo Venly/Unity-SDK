@@ -7,7 +7,8 @@ public class ApiExplorer_ViewNftsVC : ApiExplorer_ViewTokensBaseVC<VyNftDto, VyC
 {
     public ApiExplorer_ViewNftsVC() : base(eApiExplorerViewId.WalletApi_ViewNfts) { }
 
-    protected override eApiExplorerViewId DetailViewId => eApiExplorerViewId.Shared_Erc1155TokenDetails;
+    protected override eApiExplorerViewId DetailViewId => eApiExplorerViewId.WalletApi_ViewNftDetails;
+    protected override BlackboardKey<VyNftDto> DetailTokenKey => ApiExplorer_TokenDetailsDataKeys.KEY_Nft;
 
     protected override VyTask<VyNftDto[]> GetTokenBalances(string walletId)
     {

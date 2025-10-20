@@ -1,9 +1,8 @@
-using System;
 using UnityEngine.UIElements;
 using Venly;
-using Venly.Models.Shared;
 using Venly.Models.Wallet;
 
+[SampleViewMeta(eApiExplorerViewId.WalletApi_CreateUser, "Create User")]
 public class ApiExplorer_CreateUser : SampleViewBase<eApiExplorerViewId>
 {
 
@@ -38,9 +37,9 @@ public class ApiExplorer_CreateUser : SampleViewBase<eApiExplorerViewId>
 
         ViewManager.Loader.Show("Creating User..");
         VenlyAPI.Wallet.CreateUser(createParams)
-            .OnSuccess(wallet =>
+            .OnSuccess(user =>
             {
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_WalletDetails, ApiExplorer_WalletDetailsVC.DATAKEY_WALLET, wallet);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_UserDetails, ApiExplorer_UserDetailsVC.KEY_User, user);
                 ViewManager.SwitchView(eApiExplorerViewId.WalletApi_UserDetails, CurrentBackTarget);
             })
             .OnFail(ViewManager.Exception.Show)

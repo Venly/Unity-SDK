@@ -2,13 +2,15 @@ using System;
 using UnityEngine.UIElements;
 using Venly;
 using Venly.Models.Shared;
+using Venly.Models.Token;
 using Venly.Models.Wallet;
 
+[SampleViewMeta(eApiExplorerViewId.WalletApi_TransferNft, "Transfer NFT")] 
 public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_WALLET = "wallet";
-    public const string DATAKEY_TOKEN = "token";
+    public static readonly BlackboardKey<VyWalletDto> KEY_Wallet = new ("wallet");
+    public static readonly BlackboardKey<VyNftDto> KEY_Token = new ("token");
 
     //DATA
     private VyWalletDto _sourceWallet;
@@ -44,8 +46,8 @@ public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
         _sourceToken = null;
 
         //Check if Source Is Set
-        TryGetBlackboardData(out _sourceWallet, DATAKEY_WALLET);
-        ToggleElement("btn-select-source", _sourceWallet == null);
+        TryGet(KEY_Wallet, out _sourceWallet);
+        ToggleElement("btn-select-source-wallet", _sourceWallet == null);
         UpdateSourceWallet(_sourceWallet);
 
         _btnSelectSourceWallet.ToggleDisplay(_sourceWallet == null);
@@ -54,7 +56,7 @@ public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
         //Check if Token is Set
         if (_sourceWallet != null)
         {
-            TryGetBlackboardData(out _sourceToken, localKey: DATAKEY_TOKEN);
+            TryGet(KEY_Token, out _sourceToken);
             _btnSelectSourceToken.ToggleDisplay(_sourceToken == null);
             UpdateSourceToken(_sourceToken);
         }
@@ -98,12 +100,14 @@ public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
             VenlyAPI.Wallet.GetUser(_sourceWallet.UserId)
                 .OnSuccess(user =>
                 {
-                    ViewManager.Loader.Show("Retrieving Associated User...");
-                    _sourceUser = user;
-                    ToggleElement("btn-transfer", true);
+                    using (ViewManager.BeginLoad("Retrieving Associated User..."))
+                    {
+                        _sourceUser = user;
+                        ToggleElement("btn-transfer", true);
+                    }
                 })
                 .OnFail(ex => ViewManager.HandleException(ex))
-                .Finally(() => ViewManager.Loader.Hide());
+                .Finally(() => { /* scope handles loader */ });
         }
     }
 
@@ -118,11 +122,9 @@ public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
         }
         else
         {
-            var tokenName = _sourceToken.Name;
-            //if (_sourceToken.HasAttribute("mintNumber")) tokenName += $" (#{_sourceToken.GetAttribute("mintNumber")})";
-
+            var tokenName = $"{_sourceToken.Contract.Name} (#{_sourceToken.Id})";
             SetLabel("lbl-source-token", tokenName);
-            //SetLabel("lbl-type", $"{_sourceToken.Contract.Type} ({(_sourceToken.Fungible?"Fungible":"NFT")})");
+            SetLabel("lbl-type", _sourceToken.Contract.Type);
         }
 
         ToggleElement("txt-amount", _sourceToken?.Fungible??true);
@@ -136,7 +138,7 @@ public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
 
     private void OnClick_SelectSourceToken()
     {
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_ViewNfts, "sourceWallet", _sourceWallet);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_ViewNfts, ApiExplorer_ViewTokensBaseVC<VyNftDto, VyControl_NftListView, VyControl_NftListItem>.KEY_SourceWallet, _sourceWallet);
         ViewManager.SelectionMode(eApiExplorerViewId.WalletApi_ViewNfts, "Select Token")
             .OnComplete(result =>
             {
@@ -187,12 +189,12 @@ public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
             if (!ValidateInput<int>("txt-amount")) return;
 
         //Execute
-        var reqParams = new VyCreateNftTransferTransactionRequest()
+        var reqParams = new VyBuildNftTransferTransactionRequest()
         {
             Chain = _sourceWallet?.Chain,
             WalletId = _sourceWallet?.Id,
             TokenAddress = _sourceToken.Contract.Address,
-            //TokenId = _sourceToken.Id, //TODO
+            TokenId = _sourceToken.Id,
             To = GetValue("txt-target-address"),
             Amount = _sourceToken.Fungible??false?GetValue<int>("txt-amount"):null
         };
@@ -203,15 +205,26 @@ public class ApiExplorer_TransferNftVC : SampleViewBase<eApiExplorerViewId>
             return;
         }
 
-        ViewManager.Loader.Show("Transferring...");
-        VenlyAPI.Wallet.CreateTransaction_NftTransfer(reqParams, userAuth)
+        //using (ViewManager.BeginLoad("Transferring..."))
+        //{
+        //    var result = await VenlyAPI.Wallet.TransferNFT(reqParams, userAuth);
+        //    if (!result.Success) ViewManager.HandleException(result.Exception);
+        //    else
+        //    {
+        //        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxHash, result.Data.TransactionHash);
+        //        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxChain, _sourceWallet.Chain.Value);
+        //        ViewManager.SwitchView(eApiExplorerViewId.WalletApi_TransactionDetails, CurrentBackTarget);
+        //    }
+        //}
+
+        VenlyAPI.Wallet.TransferNFT(reqParams, userAuth)
+            .WithLoader(ViewManager, "Transferring...")
             .OnSuccess(transferInfo =>
             {
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXHASH, transferInfo.TransactionHash);
-                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.DATAKEY_TXCHAIN, _sourceWallet.Chain);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxHash, transferInfo.TransactionHash);
+                ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransactionDetails, ApiExplorer_TransactionDetailsVC.KEY_TxChain, _sourceWallet.Chain.Value);
                 ViewManager.SwitchView(eApiExplorerViewId.WalletApi_TransactionDetails, CurrentBackTarget);
             })
-            .OnFail(ViewManager.HandleException)
-            .Finally(ViewManager.Loader.Hide);
+            .OnFail(ViewManager.HandleException);
     }
 }

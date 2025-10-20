@@ -1,9 +1,9 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Samples/Sample_Shared/SampleSharedStyle.uss?fileID=7433441132597879392&amp;guid=87b612c5c3ef33c4cb5833fee346054f&amp;type=3#SampleSharedStyle" />
+    <Style src="project://database/Assets/Samples/Shared/SampleSharedStyle.uss?fileID=7433441132597879392&amp;guid=87b612c5c3ef33c4cb5833fee346054f&amp;type=3#SampleSharedStyle" />
     <ui:VisualElement name="root" class="sample-main-background" style="justify-content: flex-start; flex-grow: 1;">
         <SampleControl_Header header-title="API Features Sample" show-navigate-back="true" name="view-header" />
-        <ui:VisualElement style="align-items: center; flex-grow: 1; justify-content: center;">
-            <ui:VisualElement style="margin-bottom: 50px; margin-left: 20px; margin-right: 20px; justify-content: flex-start; flex-direction: column; min-width: 400px;">
+        <ui:VisualElement style="align-items: center; flex-grow: 1; justify-content: center; align-self: auto;">
+            <ui:VisualElement style="margin-bottom: 50px; margin-left: 20px; margin-right: 20px; justify-content: flex-start; flex-direction: column; min-width: auto; align-self: stretch;">
                 <ui:TextField picking-mode="Ignore" label="E-Mail" name="txt-email" />
                 <ui:TextField picking-mode="Ignore" label="Password" name="txt-password" password="true" />
                 <ui:TextField picking-mode="Ignore" label="Pincode" name="txt-pincode" password="false" />

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Beamable;
 using Beamable.Common;
@@ -121,8 +122,14 @@ namespace Venly.Backends.Beamable
                 {
                     try
                     {
-                        var serverResponse = JsonConvert.DeserializeObject<VyServerResponseDto>(result);
+                        var decodedResult = Encoding.UTF8.GetString(Convert.FromBase64String(result));
+                        var serverResponse = JsonConvert.DeserializeObject<VyServerResponseDto>(decodedResult);
                         VyTaskResult<T> taskResult;
+
+                        if (serverResponse.IsDataEncoded)
+                        {
+                            serverResponse.Data = Encoding.UTF8.GetString(Convert.FromBase64String(serverResponse.Data));
+                        }
 
                         if (serverResponse is { Success: true })
                         {

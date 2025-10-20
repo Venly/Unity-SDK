@@ -11,15 +11,14 @@ using Beamable.Player;
 using Venly.Backends.Beamable;
 #endif
 
-public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
+public class ApiExplorer_CreatePortalUserVC : SampleViewBase<eApiExplorerViewId>
 {
-    public ApiExplorer_LoginUserVC() :
-        base(eApiExplorerViewId.Auth_Login)
-    { }
+    public ApiExplorer_CreatePortalUserVC() : 
+        base(eApiExplorerViewId.Auth_Create) { }
 
     protected override void OnBindElements(VisualElement root)
     {
-        BindButton("btn-login", onClick_LoginUser);
+        BindButton("btn-create", onClick_CreateUser);
     }
 
     protected override void OnActivate()
@@ -31,48 +30,59 @@ public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
         SetLabel("lbl-backend-provider", VenlySettings.BackendProvider.ToString());
     }
 
-    private void onClick_LoginUser()
+    private void onClick_CreateUser()
     {
         if (!ValidateInput("txt-email")) return;
         if (!ValidateInput("txt-password")) return;
+        if (!ValidateInput("txt-pincode")) return;
+
 
 #if ENABLE_VENLY_BEAMABLE
-        Beamable_LoginUser();
+        Beamable_CreateUser();
 #elif ENABLE_VENLY_PLAYFAB
-        PlayFab_LoginUser();
+        PlayFab_CreateUser();
 #else
     ViewManager.Exception.Show($"No Implementation for selected Backend Provider ({VenlySettings.BackendProvider.GetMemberName()})");
 #endif
     }
 
+
 #if ENABLE_VENLY_BEAMABLE
-    private async void Beamable_LoginUser()
+    private async void Beamable_CreateUser()
     {
         try
         {
-            using (ViewManager.BeginLoad("Logging in..."))
+            using (ViewManager.BeginLoad("Creating User..."))
             {
                 //Retrieve BeamContext
                 var ctx = BeamContext.Default;
                 await ctx.OnReady;
+                await ctx.Accounts.OnReady;
 
                 //Provide BeamContext to Beamable Provider
                 VenlyAPI.SetProviderData(VyProvider_Beamable.BeamContextDataKey, ctx);
 
+                //Check if email is available
+                var isAvailable = await ctx.Accounts.IsEmailAvailable(GetValue("txt-email"));
+                if (!isAvailable) throw new Exception("Email is already used.");
+
                 //Login with Credentials
-                var operation = await ctx.Accounts.RecoverAccountWithEmail(GetValue("txt-email"), GetValue("txt-password"));
-                if (operation.isSuccess)
+                var newAccount = await ctx.Accounts.CreateNewAccount();
+                await ctx.Accounts.SwitchToAccount(newAccount);
+
+                var operation = await ctx.Accounts.Current.AddEmail(GetValue("txt-email"), GetValue("txt-password"));
+
+                if (!operation.isSuccess)
                 {
-                    await operation.SwitchToAccount();
-                }
-                else if (operation.error == PlayerRecoveryError.UNKNOWN_CREDENTIALS)
-                {
-                    throw new Exception("Unknown Credentials");
-                }
-                else
-                {
-                    var ex = operation.GetException();
-                    throw new Exception($"Failed to recover the account. (inner-error={ex.Message})");
+                    switch (operation.error)
+                    {
+                        case PlayerRegistrationError.ALREADY_HAS_CREDENTIAL:
+                            throw new Exception("Account already registered");
+                        case PlayerRegistrationError.CREDENTIAL_IS_ALREADY_TAKEN:
+                            throw new Exception("Credentials already used");
+                        default:
+                            throw operation.innerException;
+                    }
                 }
 
                 SwitchToPortal(ctx.PlayerId.ToString());
@@ -86,11 +96,11 @@ public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
 #endif
 
 #if ENABLE_VENLY_PLAYFAB
-    private async void PlayFab_LoginUser()
+    private async void PlayFab_CreateUser()
     {
         using (ViewManager.BeginLoad("Logging in..."))
         {
-            var result = await PlayFabAuth.SignIn(GetValue("txt-email"), GetValue("txt-password"));
+            var result = await PlayFabAuth.SignUp(GetValue("txt-email"), GetValue("txt-password"));
             if (!result.Success)
             {
                 ViewManager.HandleException(result.Exception);
@@ -105,6 +115,7 @@ public class ApiExplorer_LoginUserVC : SampleViewBase<eApiExplorerViewId>
 
     private void SwitchToPortal(string userId)
     {
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.Auth_UserPortal, ApiExplorer_UserPortalVC.KEY_PINCODE, GetValue("txt-pincode"));
         ViewManager.SetViewBlackboardData(eApiExplorerViewId.Auth_UserPortal, ApiExplorer_UserPortalVC.KEY_PROVIDER_USER_ID, userId);
         ViewManager.SwitchView(eApiExplorerViewId.Auth_UserPortal);
     }

@@ -24,7 +24,7 @@ public class ApiExplorer_Erc20TokenDetailsVC : SampleViewBase<eApiExplorerViewId
         ShowNavigateHome = false;
 
         //Retrieve Token from Blackboard (should be set by calling view)
-        TryGetBlackboardData(out _token, localKey: ApiExplorer_TokenDetailsDataKeys.DATAKEY_TOKEN);
+        TryGet(ApiExplorer_TokenDetailsDataKeys.KEY_Erc20Token, out _token);
     }
 
     protected override void OnRefreshUI()
@@ -43,9 +43,9 @@ public class ApiExplorer_Erc20TokenDetailsVC : SampleViewBase<eApiExplorerViewId
     #region EVENTS
     private void OnClick_Transfer()
     {
-        var wallet = GetBlackBoardData<VyWalletDto>(ApiExplorer_TokenDetailsDataKeys.DATAKEY_WALLET);
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransferErc20Token, ApiExplorer_TransferErc20TokenVC.DATAKEY_WALLET, wallet);
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransferErc20Token, ApiExplorer_TransferErc20TokenVC.DATAKEY_TOKEN, _token);
+        if (!TryGet(ApiExplorer_TokenDetailsDataKeys.KEY_WALLET, out VyWalletDto wallet)) return;
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransferErc20Token, ApiExplorer_TransferErc20TokenVC.KEY_Wallet, wallet);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.WalletApi_TransferErc20Token, ApiExplorer_TransferErc20TokenVC.KEY_Token, _token);
 
         ViewManager.SwitchView(eApiExplorerViewId.WalletApi_TransferErc20Token);
     }

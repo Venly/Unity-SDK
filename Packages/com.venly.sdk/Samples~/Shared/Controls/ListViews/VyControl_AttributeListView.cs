@@ -4,7 +4,7 @@ using Venly.Models.Token;
 using Venly.Utils;
 
 //ITEM
-public class VyControl_AttributeListItem : VyControl_ListViewItemBase<VyMetadataAttribute>
+public class VyControl_AttributeListItem : VyControl_ListViewItemBase<VyAttributeDto>
 {
     //public VyControl_AttributeListItem() : base("VyControl_AttributeListItem") { }
 
@@ -15,7 +15,7 @@ public class VyControl_AttributeListItem : VyControl_ListViewItemBase<VyMetadata
         AddLabel(root, "lbl-value", "Value");
     }
 
-    public override void BindItem(VyMetadataAttribute sourceItem)
+    public override void BindItem(VyAttributeDto sourceItem)
     {
         SetLabel("lbl-type", sourceItem.Type);
         SetLabel("lbl-name", sourceItem.Name);
@@ -31,7 +31,7 @@ public class VyControl_AttributeListItem : VyControl_ListViewItemBase<VyMetadata
 }
 
 //LIST VIEW
-public class VyControl_AttributeListView : VyControl_ListViewBase<VyMetadataAttribute, VyControl_AttributeListItem>
+public class VyControl_AttributeListView : VyControl_ListViewBase<VyAttributeDto, VyControl_AttributeListItem>
 {
     public VyControl_AttributeListView() : base(false) { }
     public new class UxmlFactory : UxmlFactory<VyControl_AttributeListView, UxmlTraits> { }

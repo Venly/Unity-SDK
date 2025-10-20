@@ -1,16 +1,19 @@
+using System;
+using System.Diagnostics.Contracts;
 using UnityEngine.UIElements;
 using Venly;
+using Venly.Models.Shared;
 using Venly.Models.Token;
 using Venly.Models.Wallet;
 
 public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
 {
     //DATA-KEYS
-    public const string DATAKEY_CONTRACT = "contract";
-    public const string DATAKEY_TOKENTYPE_SUMMARY = "tokentype-summary";
+    public static readonly BlackboardKey<VyErc1155ContractDto> KEY_Contract = new ("contract");
+    public static readonly BlackboardKey<VyErc1155TokenTypeDto> KEY_TokenType = new ("tokentype");
 
     //DATA
-    private VyErc1155TokenTypeSummaryDto _sourceTokenType;
+    private VyErc1155TokenTypeDto _sourceTokenType;
     private VyErc1155ContractDto _sourceContract;
 
     //UI
@@ -39,14 +42,14 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
         ShowNavigateHome = false;
 
         //Check if Source Is Set
-        TryGetBlackboardData(out _sourceContract, localKey: DATAKEY_CONTRACT);
+        TryGet(KEY_Contract, out _sourceContract);
         _btnSelectContract.ToggleDisplay(_sourceContract == null);
         UpdateSourceContract(_sourceContract);
 
         //Check if Token is Set
         if (_sourceContract != null)
         {
-            TryGetBlackboardData(out _sourceTokenType, localKey: DATAKEY_TOKENTYPE_SUMMARY);
+            TryGet(KEY_TokenType, out _sourceTokenType);
             _btnSelectTokenType.ToggleDisplay(_sourceTokenType == null);
             UpdateSourceTokenType(_sourceTokenType);
         }
@@ -78,7 +81,7 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
         _btnSelectTokenType.ToggleDisplay(_sourceContract != null);
     }
 
-    private void UpdateSourceTokenType(VyErc1155TokenTypeSummaryDto sourceTokenType)
+    private void UpdateSourceTokenType(VyErc1155TokenTypeDto sourceTokenType)
     {
         _sourceTokenType = sourceTokenType;
 
@@ -90,8 +93,8 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
         }
         else
         {
-            SetLabel("lbl-source-tokentype", $"{_sourceTokenType.Name} ({_sourceTokenType.TokenTypeId})");
-            SetLabel("lbl-fungible", _sourceTokenType.Fungible??false ?"YES":"NO");
+            SetLabel("lbl-source-tokentype", $"{_sourceTokenType.Metadata.Name} ({_sourceTokenType.TokenTypeId})");
+            SetLabel("lbl-fungible", _sourceTokenType.Metadata.Fungible??false ?"YES":"NO");
             SetLabel("lbl-supply", $"{_sourceTokenType.Supply.Current}/{_sourceTokenType.Supply.Max}");
         }
     }
@@ -109,12 +112,16 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
     private void onClick_SelectContract()
     {
         ViewManager.SelectionMode(eApiExplorerViewId.TokenApi_ViewErc1155Contracts, "Select Contract")
-            .OnComplete(result =>
+            .OnComplete(async result =>
             {
                 if (result.Success)
                 {
-                    var contract = result.Data as VyErc1155ContractDto;
-                    UpdateSourceContract(contract);
+                    var summary = result.Data as VyErc1155ContractSummaryDto;
+                    var contractResponse = await VenlyAPI.Token.GetErc1155Contract(summary.Chain, summary.Address);
+                    if (contractResponse.Success)
+                    {
+                        UpdateSourceContract(contractResponse.Data);
+                    }
                 }
             });
     }
@@ -122,14 +129,18 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
     private void onClick_SelectTokenType()
     {
         ViewManager.ClearViewBlackboardData(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes);
-        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes, ApiExplorer_ViewTokenTypesVC.DATAKEY_CONTRACT, _sourceContract);
+        ViewManager.SetViewBlackboardData(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes, ApiExplorer_ViewTokenTypesVC.KEY_Contract, _sourceContract);
         ViewManager.SelectionMode(eApiExplorerViewId.TokenApi_ViewErc1155TokenTypes, "Select TokenType")
-            .OnComplete(result =>
+            .OnComplete(async result =>
             {
                 if (result.Success)
                 {
-                    var token = result.Data as VyErc1155TokenTypeSummaryDto;
-                    UpdateSourceTokenType(token);
+                    var summary = result.Data as VyErc1155TokenTypeSummaryDto;
+                    var tokenResponse = await VenlyAPI.Token.GetErc1155TokenType(summary.Chain, summary.ContractAddress, summary.TokenTypeId);
+                    if(tokenResponse.Success)
+                    {
+                        UpdateSourceTokenType(tokenResponse.Data);
+                    }         
                 }
             });
     }
@@ -171,16 +182,14 @@ public class ApiExplorer_MintTokenVC : SampleViewBase<eApiExplorerViewId>
             TokenTypeId = _sourceTokenType.TokenTypeId
         };
 
-        ViewManager.Loader.Show("Minting...");
         VenlyAPI.Token.MintErc1155Tokens(reqParams)
+            .WithLoader(ViewManager, "Minting...")
             .OnSuccess(mintInfo =>
             {
-                //todo show confirmation
                 ViewManager.Info.Show("Token successfully minted!");
                 ViewManager.NavigateBack();
             })
-            .OnFail(ViewManager.HandleException)
-            .Finally(ViewManager.Loader.Hide);
+            .OnFail(ViewManager.HandleException);
     }
     #endregion
 }

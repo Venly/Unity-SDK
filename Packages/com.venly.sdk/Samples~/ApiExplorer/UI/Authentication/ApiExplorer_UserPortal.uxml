@@ -3,12 +3,8 @@
     <ui:VisualElement name="root" class="sample-main-background" style="justify-content: flex-start; flex-grow: 1;">
         <SampleControl_Header header-title="API Features Sample" show-navigate-back="true" name="view-header" />
         <ui:VisualElement style="align-items: center; flex-grow: 1; justify-content: center;">
-            <ui:VisualElement style="margin-bottom: 50px; margin-left: 20px; margin-right: 20px; flex-direction: row; justify-content: space-between; max-width: 400px; flex-grow: 1; align-items: center;">
-                <ui:VisualElement style="flex-grow: 1; justify-content: flex-start; align-items: center; min-width: auto; min-height: auto;">
-                    <ui:Button text="Wallet" display-tooltip-when-elided="true" name="btn-wallet" />
-                    <ui:Button text="Market" display-tooltip-when-elided="true" name="btn-market" />
-                </ui:VisualElement>
-            </ui:VisualElement>
+            <ui:Button text="Wallet" display-tooltip-when-elided="true" name="btn-wallet" />
+            <ui:Button text="User" display-tooltip-when-elided="true" name="btn-user" />
         </ui:VisualElement>
         <ui:VisualElement name="admin-details" style="align-items: center; margin-bottom: 30px;">
             <ui:Label text="Backend Provider" display-tooltip-when-elided="true" style="-unity-font-style: bold; padding-bottom: 0;" />

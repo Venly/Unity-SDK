@@ -9,6 +9,7 @@ public class ApiExplorer_ViewErc20TokensVC : ApiExplorer_ViewTokensBaseVC<VyErc2
     public ApiExplorer_ViewErc20TokensVC() : base(eApiExplorerViewId.WalletApi_ViewErc20Tokens) { }
 
     protected override eApiExplorerViewId DetailViewId => eApiExplorerViewId.Shared_Erc20TokenDetails;
+    protected override BlackboardKey<VyErc20TokenDto> DetailTokenKey => ApiExplorer_TokenDetailsDataKeys.KEY_Erc20Token;
 
     protected override VyTask<VyErc20TokenDto[]> GetTokenBalances(string walletId)
     {

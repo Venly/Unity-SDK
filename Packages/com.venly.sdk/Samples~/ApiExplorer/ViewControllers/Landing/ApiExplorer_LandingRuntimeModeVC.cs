@@ -12,7 +12,6 @@ public class ApiExplorer_LandingRuntimeModeVC : SampleViewBase<eApiExplorerViewI
         BindButton("btn-admin", onClick_Admin);
         BindButton("btn-user-wallet", onClick_ShowUserWallet);
 
-        SetLabel("lbl-user-mail", GetBlackBoardData<string>("user-mail"));
         SetLabel("lbl-backend-provider", VenlySettings.BackendProvider.ToString());
     }
 
